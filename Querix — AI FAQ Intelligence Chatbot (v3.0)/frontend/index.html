@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Querix — AI FAQ Intelligence Chatbot (v3.0)</title>
+  <meta name="description" content="Querix v3.0: High-precision enterprise AI FAQ intelligence platform powered by NLP, TF-IDF cosine matching, and the Jarvix voice agent.">
+
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="logo.png">
+
+  <!-- Google Fonts: Space Grotesk, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="stylesheet" href="style.css?v=3.8">
+</head>
+<body>
+
+  <!-- Main Application Container -->
+  <div id="app" class="app-layout">
+    
+    <!-- Sidebar Overlay for mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Left Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <img src="logo.png" alt="Querix Logo" class="brand-logo-img">
+          <div class="brand-text">
+            <h1>Querix</h1>
+            <span class="sub-badge">AI FAQ Intelligence</span>
+          </div>
+        </div>
+
+        <button id="close-sidebar-mobile" class="icon-btn mobile-only" aria-label="Close sidebar">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-actions">
+        <button id="new-chat-btn" class="btn btn-primary new-chat-btn">
+          <i data-lucide="plus"></i>
+          <span>New Chat</span>
+          <kbd class="shortcut-kbd">Ctrl+J</kbd>
+        </button>
+      </div>
+
+      <div class="sidebar-scrollable">
+        <!-- Topic Contexts -->
+        <div class="sidebar-section">
+          <div class="section-label">
+            <span>TOPIC CONTEXTS</span>
+            <span id="topic-count-badge" class="count-badge">7</span>
+          </div>
+          <ul id="topic-list" class="topic-list">
+            <li class="topic-item active" data-topic="All">
+              <i data-lucide="layers"></i>
+              <span>All Topics</span>
+              <span class="topic-count">65</span>
+            </li>
+            <li class="topic-item" data-topic="Returns & Refunds">
+              <i data-lucide="rotate-ccw"></i>
+              <span>Returns & Refunds</span>
+              <span class="topic-count">9</span>
+            </li>
+            <li class="topic-item" data-topic="Product Help">
+              <i data-lucide="sparkles"></i>
+              <span>Product Help</span>
+              <span class="topic-count">10</span>
+            </li>
+            <li class="topic-item" data-topic="Billing & Plans">
+              <i data-lucide="credit-card"></i>
+              <span>Billing & Plans</span>
+              <span class="topic-count">10</span>
+            </li>
+            <li class="topic-item" data-topic="Technical Support">
+              <i data-lucide="cpu"></i>
+              <span>Technical Support</span>
+              <span class="topic-count">9</span>
+            </li>
+            <li class="topic-item" data-topic="Account & Security">
+              <i data-lucide="shield-check"></i>
+              <span>Account & Security</span>
+              <span class="topic-count">9</span>
+            </li>
+            <li class="topic-item" data-topic="Shipping & Orders">
+              <i data-lucide="truck"></i>
+              <span>Shipping & Orders</span>
+              <span class="topic-count">9</span>
+            </li>
+            <li class="topic-item" data-topic="General">
+              <i data-lucide="help-circle"></i>
+              <span>General</span>
+              <span class="topic-count">9</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Chat History -->
+        <div class="sidebar-section">
+          <div class="section-label">
+            <span>SAVED SESSIONS</span>
+            <button id="clear-history-btn" class="text-btn" title="Clear current session">Clear</button>
+          </div>
+          <ul id="history-list" class="history-list">
+            <li class="history-item active">
+              <i data-lucide="message-square"></i>
+              <span class="history-title">Current FAQ Session</span>
+              <span class="history-time">Now</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer: Token Meter & Go Pro & User Menu -->
+      <div class="sidebar-footer">
+        
+        <!-- Live Token Meter -->
+        <div class="token-meter-card" id="token-meter-widget">
+          <div class="token-meter-header">
+            <div class="token-meter-title">
+              <i data-lucide="gauge"></i>
+              <span>Tokens Meter</span>
+            </div>
+            <button id="view-ledger-btn" class="token-ledger-link" title="View usage ledger">Ledger</button>
+          </div>
+          <div class="token-stats">
+            <span id="token-used-text" class="tokens-num">0</span>
+            <span class="tokens-div">/</span>
+            <span id="token-limit-text" class="tokens-total">10,000</span>
+          </div>
+          <div class="token-progress-track">
+            <div id="token-progress-bar" class="token-progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="token-footer-info">
+            <span id="plan-badge-label" class="plan-pill">Free Tier</span>
+            <span id="token-pct-text" class="token-pct">0% used</span>
+          </div>
+        </div>
+
+        <!-- Go Pro Card -->
+        <div class="go-pro-card" id="go-pro-card">
+          <div class="go-pro-sparkle">
+            <i data-lucide="zap"></i>
+          </div>
+          <div class="go-pro-content">
+            <h4>Upgrade to Pro</h4>
+            <p>500K tokens, full Jarvix voice, custom FAQ uploads & analytics.</p>
+            <button id="sidebar-upgrade-btn" class="btn btn-upgrade">
+              <span>Upgrade ₹499/mo</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- User Menu Bar & Popover Dropdown -->
+        <div class="user-menu-container" id="user-menu-container">
+          <div class="user-menu-bar" id="user-menu-btn" role="button" tabindex="0">
+            <div class="user-avatar" id="user-avatar-badge">
+              <i data-lucide="user"></i>
+            </div>
+            <div class="user-info">
+              <span id="user-name-display" class="user-name">Guest User</span>
+              <span id="user-status-display" class="user-status">5 questions left</span>
+            </div>
+            <button class="user-more-btn" aria-label="Toggle user options dropdown">
+              <i data-lucide="chevron-up" id="user-menu-chevron"></i>
+            </button>
+          </div>
+
+          <!-- User Popover Dropdown Menu -->
+          <div class="user-dropdown-menu" id="user-dropdown-menu">
+            <div class="dropdown-header">
+              <div class="dropdown-user-name" id="dropdown-user-name">Guest User</div>
+              <div class="dropdown-user-badge" id="dropdown-user-badge">Free Tier</div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="dropdown-item" id="dropdown-opt-profile">
+              <i data-lucide="user"></i>
+              <span>Profile & Account</span>
+            </button>
+            <button type="button" class="dropdown-item" id="dropdown-opt-upgrade">
+              <i data-lucide="zap"></i>
+              <span>Upgrade to Pro</span>
+            </button>
+            <button type="button" class="dropdown-item" id="dropdown-opt-ledger">
+              <i data-lucide="bar-chart-2"></i>
+              <span>Token Usage Ledger</span>
+            </button>
+            <button type="button" class="dropdown-item" id="dropdown-opt-theme">
+              <i data-lucide="moon"></i>
+              <span id="dropdown-theme-label">Switch to Light Mode</span>
+            </button>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="dropdown-item dropdown-item-danger" id="dropdown-opt-auth">
+              <i data-lucide="log-in" id="dropdown-auth-icon"></i>
+              <span id="dropdown-auth-label">Sign In / Sign Up</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      
+      <!-- Top Header Navigation -->
+      <header class="app-header">
+        <div class="header-left">
+          <button id="toggle-sidebar-btn" class="icon-btn" aria-label="Toggle sidebar">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="current-context">
+            <span class="context-label">Context:</span>
+            <span id="active-context-badge" class="badge badge-topic">All Topics</span>
+          </div>
+          <div class="status-indicator" title="Knowledge Base Loaded">
+            <span class="pulse-dot"></span>
+            <span class="status-text">NLP Index Active (65 FAQs)</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Voice Mode Quick Launcher -->
+          <button id="header-voice-btn" class="btn btn-voice-quick" title="Open Jarvix Voice Mode">
+            <div class="mini-orb-icon"></div>
+            <span>Jarvix Voice</span>
+          </button>
+
+          <!-- Admin Dashboard -->
+          <button id="header-admin-btn" class="icon-btn" title="Admin Analytics & Custom FAQs">
+            <i data-lucide="bar-chart-3"></i>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button id="theme-toggle-btn" class="icon-btn" title="Toggle Light / Dark mode">
+            <i data-lucide="moon" id="theme-icon"></i>
+          </button>
+
+          <!-- Command Palette Shortcut Badge -->
+          <button id="header-cmd-btn" class="cmd-shortcut-btn" title="Open Command Palette">
+            <span>Cmd Palette</span>
+            <kbd>Ctrl+K</kbd>
+          </button>
+        </div>
+      </header>
+
+      <!-- Chat Messages Container -->
+      <div id="chat-scroll-area" class="chat-scroll-area">
+        <div class="chat-container" id="chat-container">
+          
+          <!-- Empty State Hero -->
+          <div id="empty-state" class="empty-state">
+            <div class="hero-glyph">
+              <img src="logo.png" alt="Querix Logo" class="hero-logo-img">
+              <div class="glyph-aura"></div>
+            </div>
+            <h2 class="hero-title">How can Querix assist you today?</h2>
+
+            <p class="hero-subtitle">
+              Instant intelligence powered by NLP lemmatization, TF-IDF cosine matching, and Jarvix voice synthesis.
+            </p>
+
+            <div class="starter-grid">
+              <div class="starter-card" data-query="how do I get my money back?">
+                <div class="starter-icon"><i data-lucide="rotate-ccw"></i></div>
+                <div class="starter-text">
+                  <span class="starter-topic">Returns & Refunds</span>
+                  <span class="starter-q">how do I get my money back?</span>
+                </div>
+              </div>
+              <div class="starter-card" data-query="How do I initiate a voice conversation with Jarvix?">
+                <div class="starter-icon"><i data-lucide="mic"></i></div>
+                <div class="starter-text">
+                  <span class="starter-topic">Product Help</span>
+                  <span class="starter-q">How do I talk with Jarvix Voice?</span>
+                </div>
+              </div>
+              <div class="starter-card" data-query="What subscription plans does Querix offer?">
+                <div class="starter-icon"><i data-lucide="credit-card"></i></div>
+                <div class="starter-text">
+                  <span class="starter-topic">Billing & Plans</span>
+                  <span class="starter-q">What subscription plans are available?</span>
+                </div>
+              </div>
+              <div class="starter-card" data-query="How do I track my order shipment status?">
+                <div class="starter-icon"><i data-lucide="truck"></i></div>
+                <div class="starter-text">
+                  <span class="starter-topic">Shipping & Orders</span>
+                  <span class="starter-q">How do I track my order shipment?</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message History Stream -->
+          <div id="message-list" class="message-list"></div>
+
+          <!-- Typing Indicator Bubble -->
+          <div id="typing-indicator" class="chat-bubble bot-bubble typing-bubble" style="display: none;">
+            <div class="bubble-avatar">
+              <img src="/logo.png" alt="Q" class="bot-avatar-img">
+            </div>
+            <div class="typing-content">
+
+              <span class="typing-text">Jarvix is thinking…</span>
+              <div class="typing-dots">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Floating Input Bar -->
+      <div class="chat-input-wrapper">
+        <div class="chat-input-card">
+          
+          <!-- Context pill & tokens cost estimator -->
+          <div class="input-top-bar">
+            <div class="input-context-pill">
+              <i data-lucide="tag"></i>
+              <span id="input-topic-tag">All Topics</span>
+            </div>
+            <div class="input-token-estimator">
+              <i data-lucide="zap"></i>
+              <span id="input-token-est">~15 tokens</span>
+            </div>
+          </div>
+
+          <form id="chat-form" class="chat-form">
+            <textarea 
+              id="chat-textarea" 
+              class="chat-textarea" 
+              placeholder="Ask anything or click the microphone to speak with Jarvix... (Press '/' to focus)" 
+              rows="1" 
+              autocomplete="off"
+            ></textarea>
+            
+            <div class="chat-input-actions">
+              <!-- Voice mic button -->
+              <button 
+                type="button" 
+                id="mic-btn" 
+                class="icon-btn mic-btn" 
+                title="Speak to Jarvix (Ctrl+M)" 
+                aria-label="Toggle voice mic"
+              >
+                <i data-lucide="mic"></i>
+                <span class="mic-wave"></span>
+              </button>
+
+              <!-- Send button -->
+              <button 
+                type="submit" 
+                id="send-btn" 
+                class="btn btn-send" 
+                title="Send query (Enter)" 
+                aria-label="Send message"
+              >
+                <i data-lucide="send"></i>
+              </button>
+            </div>
+          </form>
+
+        </div>
+        <div class="input-footer-note">
+          <span>Querix v3.0 uses TF-IDF cosine matching with a 0.35 confidence threshold. Press <kbd>/</kbd> to focus, <kbd>Ctrl+M</kbd> for voice.</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 3.2 Jarvix Full-Screen Voice Mode Modal -->
+  <div id="voice-modal" class="voice-modal">
+    <div class="voice-modal-backdrop" id="voice-modal-backdrop" title="Click outside to close"></div>
+
+    <!-- Persistent Floating Close Button -->
+    <button type="button" class="voice-floating-close" id="voice-floating-close" title="Close Voice Agent (Esc)">
+      <i data-lucide="x"></i>
+      <span>Exit Voice Mode</span>
+      <kbd>Esc</kbd>
+    </button>
+
+    <div class="voice-modal-content">
+      
+      <!-- Voice Mode Header -->
+      <div class="voice-header">
+        <div class="voice-brand">
+          <div class="pulse-ring"></div>
+          <h3>Jarvix Voice Agent</h3>
+          <span class="voice-pill" id="voice-state-pill">IDLE</span>
+        </div>
+        <div class="voice-controls-row">
+          <!-- Language selector -->
+          <select id="voice-lang-select" class="voice-select" title="Voice Language">
+            <option value="en-US">English (US)</option>
+            <option value="en-IN">English (India)</option>
+            <option value="hi-IN">Hindi (हिंदी)</option>
+            <option value="hinglish">Hinglish</option>
+          </select>
+          <!-- Speech speed selector -->
+          <select id="voice-speed-select" class="voice-select" title="Speech Speed">
+            <option value="0.9">0.9x Speed</option>
+            <option value="1.0" selected>1.0x Normal</option>
+            <option value="1.15">1.15x Fast</option>
+          </select>
+          <!-- Auto-read toggle -->
+          <label class="toggle-label" title="Automatically speak answer">
+            <input type="checkbox" id="auto-speak-toggle" checked>
+            <span>Auto-read</span>
+          </label>
+          <!-- Close button -->
+          <button id="close-voice-modal-btn" class="icon-btn close-voice-btn" aria-label="Close voice mode">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center 3D Voice Orb Canvas -->
+      <div class="voice-orb-container">
+        <canvas id="voice-orb-canvas" width="220" height="220"></canvas>
+        <div class="orb-state-indicator">
+          <p id="orb-state-text">Tap orb or speak: "how do I get my money back?"</p>
+          <span class="barge-hint">Barge-in active: speak anytime to interrupt Jarvix</span>
+        </div>
+      </div>
+
+      <!-- Live Transcript & Answer Bubble in Voice Mode -->
+      <div class="voice-transcript-container">
+        <div class="live-transcript-box">
+          <span class="transcript-label">Live Speech Transcript:</span>
+          <p id="voice-transcript-text" class="voice-transcript-text">Waiting for your voice…</p>
+        </div>
+        <div id="voice-answer-box" class="voice-answer-box" style="display: none;">
+          <div class="answer-header">
+            <span class="badge" id="voice-match-badge">92% Match</span>
+            <span class="topic-label" id="voice-topic-label">Returns & Refunds</span>
+          </div>
+          <p id="voice-answer-text" class="voice-answer-text"></p>
+        </div>
+        <div id="voice-audio-meter-wrap" class="voice-audio-meter-wrap">
+          <span class="meter-label"><i data-lucide="mic"></i> Mic Signal:</span>
+          <div class="audio-meter-track">
+            <div id="audio-meter-fill" class="audio-meter-fill" style="width: 0%;"></div>
+          </div>
+          <span id="audio-status-tag" class="audio-status-tag">Ready</span>
+        </div>
+
+        <!-- Quick Voice Chips so users can immediately test speech and voice synthesis -->
+        <div class="voice-quick-chips">
+          <span class="chips-title"><i data-lucide="sparkles"></i> Tap to speak / test Jarvix:</span>
+          <div class="voice-chips-grid">
+            <button type="button" class="voice-demo-chip" data-speak="how do I get my money back?">💸 How do I get refund?</button>
+            <button type="button" class="voice-demo-chip" data-speak="What subscription plans does Querix offer?">⚡ Plans & Pricing</button>
+            <button type="button" class="voice-demo-chip" data-speak="How do I track my order shipment status?">📦 Track order</button>
+            <button type="button" class="voice-demo-chip" data-speak="What payment methods do you accept?">💳 Payment methods</button>
+          </div>
+        </div>
+
+        <!-- Mic Permission Alert (shows if permission denied or network STT error) -->
+        <div id="voice-mic-alert" class="voice-mic-alert" style="display: none;">
+          <i data-lucide="alert-triangle"></i>
+          <div class="alert-content">
+            <strong id="voice-mic-alert-title">Microphone Access Notice</strong>
+            <p id="voice-mic-alert-desc">Please grant microphone permission in your browser address bar. Or tap any chip above to hear Jarvix answer aloud.</p>
+          </div>
+          <button type="button" id="btn-request-mic" class="btn btn-secondary btn-sm">Allow Mic</button>
+        </div>
+      </div>
+
+      <!-- Voice Action Footer -->
+      <div class="voice-footer">
+        <button id="voice-interrupt-btn" class="btn btn-secondary btn-interrupt">
+          <i data-lucide="square"></i>
+          <span>Interrupt Speech (Barge-in)</span>
+        </button>
+        <button id="voice-listen-toggle-btn" class="btn btn-primary btn-listen-toggle">
+          <i data-lucide="mic"></i>
+          <span id="voice-toggle-label">Start Listening</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3.3 Auth Modal (Sign Up / Sign In) -->
+  <div id="auth-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <button class="modal-close-btn" id="close-auth-modal-btn"><i data-lucide="x"></i></button>
+      <div class="auth-header">
+        <img src="logo.png" alt="Querix Logo" class="auth-logo-img">
+        <h3 id="auth-modal-title">Welcome to Querix</h3>
+        <p id="auth-modal-sub">Create your account to unlock 10,000 monthly tokens.</p>
+      </div>
+
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-signup">Sign Up</button>
+        <button class="auth-tab" id="tab-login">Sign In</button>
+      </div>
+
+      <form id="auth-form" class="auth-form">
+        <div class="form-group" id="group-name">
+          <label>Full Name</label>
+          <input type="text" id="auth-name" placeholder="Alex Morgan" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="auth-email" placeholder="alex@company.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" required minlength="6">
+        </div>
+        
+        <div id="auth-error-msg" class="auth-error" style="display: none;"></div>
+
+        <button type="submit" id="auth-submit-btn" class="btn btn-primary btn-block">
+          <span>Create Free Account</span>
+        </button>
+      </form>
+
+      <div class="auth-divider"><span>OR</span></div>
+
+      <button id="google-auth-btn" class="btn btn-secondary btn-block btn-google">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 6.3 10.1 6.3z"/></svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <div class="auth-footer-help">
+        <p id="auth-footer-note">Guest Mode provides 5 free queries. Passwords are securely hashed with salted bcrypt.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3.4 Token Ledger Modal -->
+  <div id="ledger-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-lg">
+      <button class="modal-close-btn" id="close-ledger-modal-btn"><i data-lucide="x"></i></button>
+      <div class="modal-header">
+        <div class="icon-wrap"><i data-lucide="activity"></i></div>
+        <div>
+          <h3>Tokens & Usage Ledger</h3>
+          <p>Real-time accounting of text queries, voice queries, and quota limits.</p>
+        </div>
+      </div>
+
+      <div class="ledger-summary-row">
+        <div class="summary-tile">
+          <span class="tile-label">Current Plan</span>
+          <span id="ledger-plan-val" class="tile-val">Free Tier</span>
+        </div>
+        <div class="summary-tile">
+          <span class="tile-label">Tokens Consumed</span>
+          <span id="ledger-used-val" class="tile-val">0</span>
+        </div>
+        <div class="summary-tile">
+          <span class="tile-label">Monthly Limit</span>
+          <span id="ledger-limit-val" class="tile-val">10,000</span>
+        </div>
+        <div class="summary-tile">
+          <span class="tile-label">Cycle Status</span>
+          <span id="ledger-pct-val" class="tile-val">0%</span>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Query Preview</th>
+              <th>Type</th>
+              <th>Tokens Used</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-table-body">
+            <tr>
+              <td colspan="4" class="empty-table">No query transactions logged yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button id="ledger-topup-btn" class="btn btn-secondary">
+          <i data-lucide="plus-circle"></i>
+          <span>Add +100K Pack (₹99)</span>
+        </button>
+        <button id="ledger-upgrade-btn" class="btn btn-primary">
+          <i data-lucide="zap"></i>
+          <span>Upgrade Quota</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3.5 Plans & Upgrade Modal -->
+  <div id="pricing-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-xl">
+      <button class="modal-close-btn" id="close-pricing-modal-btn"><i data-lucide="x"></i></button>
+      <div class="pricing-header">
+        <h2>Transparent Intelligence Pricing</h2>
+        <p>Scale from personal exploration to enterprise customer intelligence seamlessly.</p>
+        
+        <!-- Monthly / Yearly Billing Toggle -->
+        <div class="billing-toggle-wrap">
+          <span class="toggle-txt" id="billing-monthly-lbl">Monthly</span>
+          <button id="billing-cycle-switch" class="switch-btn" aria-label="Toggle billing frequency">
+            <span class="switch-handle"></span>
+          </button>
+          <span class="toggle-txt" id="billing-yearly-lbl">Yearly</span>
+          <span class="discount-pill">2 MONTHS FREE</span>
+        </div>
+      </div>
+
+      <!-- 3 Tier Cards -->
+      <div class="pricing-grid">
+        
+        <!-- Free Plan -->
+        <div class="pricing-card">
+          <div class="plan-head">
+            <h3>Free</h3>
+            <p>For exploration & individual testing</p>
+          </div>
+          <div class="plan-price">
+            <span class="currency">₹</span>
+            <span class="amount">0</span>
+            <span class="period">/month</span>
+          </div>
+          <div class="plan-tokens">
+            <strong>10,000</strong> tokens / month
+          </div>
+          <ul class="plan-features">
+            <li><i data-lucide="check"></i> 65+ curated FAQs</li>
+            <li><i data-lucide="check"></i> Text chatbot with NLP</li>
+            <li><i data-lucide="check"></i> Basic Jarvix voice agent</li>
+            <li><i data-lucide="check"></i> 0.35 confidence threshold</li>
+            <li class="muted-feat"><i data-lucide="minus"></i> Custom FAQ uploads</li>
+            <li class="muted-feat"><i data-lucide="minus"></i> Priority responses</li>
+          </ul>
+          <button class="btn btn-secondary btn-block current-plan-btn" disabled>Current Plan</button>
+        </div>
+
+        <!-- Pro Plan (Most Popular) -->
+        <div class="pricing-card featured">
+          <div class="popular-ribbon">MOST POPULAR</div>
+          <div class="plan-head">
+            <h3>Pro</h3>
+            <p>For professionals & growing teams</p>
+          </div>
+          <div class="plan-price">
+            <span class="currency">₹</span>
+            <span class="amount" id="pro-price-val">499</span>
+            <span class="period" id="pro-period-val">/month</span>
+          </div>
+          <div class="plan-tokens">
+            <strong>500,000</strong> tokens / month
+          </div>
+          <ul class="plan-features">
+            <li><i data-lucide="check"></i> Everything in Free</li>
+            <li><i data-lucide="check"></i> <strong>500,000 monthly tokens</strong></li>
+            <li><i data-lucide="check"></i> Full Jarvix voice agent with barge-in</li>
+            <li><i data-lucide="check"></i> Chat history export (JSON & MD)</li>
+            <li><i data-lucide="check"></i> Custom FAQ upload (CSV/JSON)</li>
+            <li><i data-lucide="check"></i> Priority NLP inference</li>
+          </ul>
+          <button id="upgrade-pro-btn" class="btn btn-primary btn-block btn-featured">
+            <span>Upgrade to Pro</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+
+        <!-- Business Plan -->
+        <div class="pricing-card">
+          <div class="plan-head">
+            <h3>Business</h3>
+            <p>For high-volume production & support</p>
+          </div>
+          <div class="plan-price">
+            <span class="currency">₹</span>
+            <span class="amount" id="biz-price-val">1,999</span>
+            <span class="period" id="biz-period-val">/month</span>
+          </div>
+          <div class="plan-tokens">
+            <strong>3,000,000</strong> tokens / month
+          </div>
+          <ul class="plan-features">
+            <li><i data-lucide="check"></i> Everything in Pro</li>
+            <li><i data-lucide="check"></i> <strong>3,000,000 monthly tokens</strong></li>
+            <li><i data-lucide="check"></i> Developer REST API access</li>
+            <li><i data-lucide="check"></i> Team seats (5 seats included)</li>
+            <li><i data-lucide="check"></i> White-label widget embedding</li>
+            <li><i data-lucide="check"></i> 99.9% uptime enterprise SLA</li>
+          </ul>
+          <button id="upgrade-biz-btn" class="btn btn-secondary btn-block">
+            <span>Upgrade to Business</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Top-up pack callout -->
+      <div class="topup-bar">
+        <div class="topup-text">
+          <strong>Need a quick token boost?</strong>
+          <span>Purchase an instant +100,000 token top-up pack without changing your subscription.</span>
+        </div>
+        <button id="quick-topup-btn" class="btn btn-upgrade">
+          <i data-lucide="plus"></i>
+          <span>Buy +100K Pack for ₹99</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3.5.1 Querix Secure Checkout & Payment Modal -->
+  <div id="checkout-modal" class="modal checkout-modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-xl checkout-card">
+      <button class="modal-close-btn" id="close-checkout-modal-btn"><i data-lucide="x"></i></button>
+      
+      <!-- Checkout Active Form State -->
+      <div id="checkout-view-form">
+        <div class="modal-header checkout-header">
+          <div class="icon-wrap checkout-icon"><i data-lucide="shield-check"></i></div>
+          <div class="checkout-title-wrap">
+            <div class="checkout-badge-row">
+              <h3>Secure Checkout & Payment</h3>
+              <span class="ssl-badge"><i data-lucide="lock"></i> 256-Bit SSL Encrypted</span>
+            </div>
+            <p>Select your payment method below to activate your upgraded AI token quota immediately.</p>
+          </div>
+        </div>
+
+        <div class="checkout-layout">
+          <!-- Left Column: Payment Methods Selection -->
+          <div class="checkout-left-col">
+            <div class="payment-tabs-nav">
+              <button type="button" class="pay-tab-btn active" data-tab="upi">
+                <i data-lucide="qr-code"></i>
+                <div class="pay-tab-meta">
+                  <strong>UPI / QR Code</strong>
+                  <span>GPay, PhonePe, Paytm, BHIM</span>
+                </div>
+                <span class="pay-badge fast">Instant</span>
+              </button>
+
+              <button type="button" class="pay-tab-btn" data-tab="cards">
+                <i data-lucide="credit-card"></i>
+                <div class="pay-tab-meta">
+                  <strong>Credit / Debit Card</strong>
+                  <span>Visa, Mastercard, RuPay, Amex</span>
+                </div>
+              </button>
+
+              <button type="button" class="pay-tab-btn" data-tab="netbanking">
+                <i data-lucide="landmark"></i>
+                <div class="pay-tab-meta">
+                  <strong>Net Banking</strong>
+                  <span>HDFC, ICICI, SBI, Axis + 50 more</span>
+                </div>
+              </button>
+
+              <button type="button" class="pay-tab-btn" data-tab="wallets">
+                <i data-lucide="wallet"></i>
+                <div class="pay-tab-meta">
+                  <strong>Wallets & PayLater</strong>
+                  <span>Paytm Wallet, Amazon Pay, Simpl</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Tab Content: UPI -->
+            <div class="pay-tab-content active" id="tab-content-upi">
+              <div class="upi-box">
+                <div class="qr-code-wrapper">
+                  <div class="qr-canvas-mock">
+                    <svg width="140" height="140" viewBox="0 0 100 100" class="qr-svg">
+                      <rect width="100" height="100" fill="#0E1326" rx="8"/>
+                      <rect x="10" y="10" width="24" height="24" fill="#00D4FF" rx="4"/>
+                      <rect x="14" y="14" width="16" height="16" fill="#0E1326" rx="2"/>
+                      <rect x="18" y="18" width="8" height="8" fill="#6C5CE7"/>
+                      <rect x="66" y="10" width="24" height="24" fill="#00D4FF" rx="4"/>
+                      <rect x="70" y="14" width="16" height="16" fill="#0E1326" rx="2"/>
+                      <rect x="74" y="18" width="8" height="8" fill="#6C5CE7"/>
+                      <rect x="10" y="66" width="24" height="24" fill="#00D4FF" rx="4"/>
+                      <rect x="14" y="70" width="16" height="16" fill="#0E1326" rx="2"/>
+                      <rect x="18" y="74" width="8" height="8" fill="#6C5CE7"/>
+                      <circle cx="50" cy="50" r="10" fill="#6C5CE7"/>
+                      <rect x="42" y="14" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="52" y="14" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="42" y="24" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="52" y="24" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="14" y="44" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="24" y="44" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="70" y="44" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="80" y="44" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="44" y="70" width="8" height="8" fill="#00D4FF"/>
+                      <rect x="56" y="76" width="6" height="6" fill="#00D4FF"/>
+                      <rect x="74" y="70" width="12" height="12" fill="#00D4FF" rx="2"/>
+                    </svg>
+                    <span class="qr-scan-label">Scan QR with Google Pay, PhonePe, Paytm</span>
+                  </div>
+                  <div class="upi-apps-row">
+                    <span class="app-pill">GPay</span>
+                    <span class="app-pill">PhonePe</span>
+                    <span class="app-pill">Paytm</span>
+                    <span class="app-pill">BHIM</span>
+                  </div>
+                </div>
+
+                <div class="upi-divider"><span>OR PAY VIA UPI ID / VPA</span></div>
+
+                <div class="form-group">
+                  <label>Enter Virtual Payment Address (UPI ID)</label>
+                  <div class="input-with-action">
+                    <input type="text" id="checkout-upi-id" placeholder="e.g. username@okhdfcbank" value="demo@querix">
+                    <button type="button" class="btn btn-secondary btn-verify-upi" id="btn-verify-upi">
+                      <i data-lucide="check-circle-2"></i> Verified
+                    </button>
+                  </div>
+                </div>
+                <div class="quick-vpa-chips">
+                  <span>Fast Demo VPAs:</span>
+                  <button type="button" class="vpa-chip" data-vpa="alex@okhdfcbank">alex@okhdfcbank</button>
+                  <button type="button" class="vpa-chip" data-vpa="querix.pro@upi">querix.pro@upi</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Cards -->
+            <div class="pay-tab-content" id="tab-content-cards" style="display: none;">
+              <div class="cards-form-box">
+                <div class="card-brand-icons">
+                  <span class="brand-tag">VISA</span>
+                  <span class="brand-tag">Mastercard</span>
+                  <span class="brand-tag">RuPay</span>
+                  <span class="brand-tag">Amex</span>
+                  <button type="button" class="btn-demo-fill" id="btn-fill-demo-card">⚡ Auto-fill Demo Card</button>
+                </div>
+
+                <div class="form-group">
+                  <label>Cardholder Name</label>
+                  <input type="text" id="card-name" placeholder="Alex Morgan" value="Alex Morgan">
+                </div>
+
+                <div class="form-group">
+                  <label>Card Number</label>
+                  <div class="input-with-icon">
+                    <i data-lucide="credit-card"></i>
+                    <input type="text" id="card-number" placeholder="4532 8901 2345 6789" maxlength="19" value="4532 8901 2345 6789">
+                  </div>
+                </div>
+
+                <div class="card-row-split">
+                  <div class="form-group">
+                    <label>Valid Thru (MM/YY)</label>
+                    <input type="text" id="card-expiry" placeholder="12/28" maxlength="5" value="12/28">
+                  </div>
+                  <div class="form-group">
+                    <label>CVV / CVC</label>
+                    <input type="password" id="card-cvv" placeholder="•••" maxlength="4" value="888">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Net Banking -->
+            <div class="pay-tab-content" id="tab-content-netbanking" style="display: none;">
+              <div class="netbanking-box">
+                <label class="section-sublabel">Select Bank:</label>
+                <div class="banks-grid">
+                  <label class="bank-card active">
+                    <input type="radio" name="bank_select" value="HDFC Bank" checked>
+                    <span>HDFC Bank</span>
+                  </label>
+                  <label class="bank-card">
+                    <input type="radio" name="bank_select" value="ICICI Bank">
+                    <span>ICICI Bank</span>
+                  </label>
+                  <label class="bank-card">
+                    <input type="radio" name="bank_select" value="State Bank of India">
+                    <span>SBI</span>
+                  </label>
+                  <label class="bank-card">
+                    <input type="radio" name="bank_select" value="Axis Bank">
+                    <span>Axis Bank</span>
+                  </label>
+                  <label class="bank-card">
+                    <input type="radio" name="bank_select" value="Kotak Mahindra">
+                    <span>Kotak Bank</span>
+                  </label>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px;">
+                  <label>Or select other banks:</label>
+                  <select id="other-banks-select" class="form-select">
+                    <option value="">Choose bank...</option>
+                    <option value="Punjab National Bank">Punjab National Bank</option>
+                    <option value="Bank of Baroda">Bank of Baroda</option>
+                    <option value="Canara Bank">Canara Bank</option>
+                    <option value="Union Bank of India">Union Bank of India</option>
+                    <option value="IndusInd Bank">IndusInd Bank</option>
+                    <option value="IDFC FIRST Bank">IDFC FIRST Bank</option>
+                    <option value="Yes Bank">Yes Bank</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Wallets -->
+            <div class="pay-tab-content" id="tab-content-wallets" style="display: none;">
+              <div class="wallets-grid">
+                <label class="wallet-card active">
+                  <input type="radio" name="wallet_select" value="Paytm" checked>
+                  <div>
+                    <strong>Paytm Wallet</strong>
+                    <span>Balance / Postpaid</span>
+                  </div>
+                </label>
+                <label class="wallet-card">
+                  <input type="radio" name="wallet_select" value="Amazon Pay">
+                  <div>
+                    <strong>Amazon Pay</strong>
+                    <span>Instant 1-Click Pay</span>
+                  </div>
+                </label>
+                <label class="wallet-card">
+                  <input type="radio" name="wallet_select" value="Simpl">
+                  <div>
+                    <strong>Simpl PayLater</strong>
+                    <span>Pay in 15 days, 0 interest</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Order Summary & Pay Action -->
+          <div class="checkout-right-col">
+            <div class="order-summary-card">
+              <h4>Order Summary</h4>
+              
+              <div class="order-plan-badge">
+                <div>
+                  <strong id="summary-plan-name">Pro Plan</strong>
+                  <span id="summary-plan-cycle">Monthly Subscription</span>
+                </div>
+                <span class="summary-tokens-badge" id="summary-plan-tokens">500,000 Tokens/mo</span>
+              </div>
+
+              <!-- Customer info -->
+              <div class="checkout-customer-fields">
+                <div class="form-group">
+                  <label>Customer Full Name</label>
+                  <input type="text" id="checkout-customer-name" placeholder="Alex Morgan" value="Alex Morgan">
+                </div>
+                <div class="form-group">
+                  <label>Billing & Invoice Email</label>
+                  <input type="email" id="checkout-customer-email" placeholder="alex@company.com" value="alex@company.com">
+                </div>
+              </div>
+
+              <!-- Discount Promo Code -->
+              <div class="promo-code-wrap">
+                <input type="text" id="checkout-promo-input" placeholder="Promo code (e.g. QUERIX50)">
+                <button type="button" id="btn-apply-promo" class="btn btn-secondary">Apply</button>
+              </div>
+              <div id="promo-status-msg" class="promo-status" style="display: none;"></div>
+
+              <!-- Line Items -->
+              <div class="summary-line-items">
+                <div class="summary-line">
+                  <span>Subtotal</span>
+                  <span id="summary-subtotal">₹499.00</span>
+                </div>
+                <div class="summary-line discount" id="summary-discount-row" style="display: none;">
+                  <span>Promo Discount</span>
+                  <span id="summary-discount-val">-₹0.00</span>
+                </div>
+                <div class="summary-line">
+                  <span>GST (18% inclusive)</span>
+                  <span id="summary-tax">₹76.12</span>
+                </div>
+                <div class="summary-line total-line">
+                  <strong>Total Payable</strong>
+                  <strong class="total-amount" id="summary-total-amount">₹499.00</strong>
+                </div>
+              </div>
+
+              <!-- Action Button -->
+              <button id="btn-complete-payment" class="btn btn-primary btn-block btn-pay-now">
+                <i data-lucide="lock"></i>
+                <span id="btn-pay-label">Pay ₹499.00 & Activate Plan</span>
+              </button>
+
+              <div class="security-guarantee">
+                <i data-lucide="shield-check"></i>
+                <span>Instant token allocation &bull; 100% Secure Gateway &bull; 7-day money-back guarantee</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkout Success / Receipt State -->
+      <div id="checkout-view-receipt" style="display: none;" class="checkout-receipt-wrap">
+        <div class="receipt-success-icon">
+          <div class="success-ring">
+            <i data-lucide="check"></i>
+          </div>
+        </div>
+
+        <h3 class="receipt-title">Payment Successful & Plan Active!</h3>
+        <p class="receipt-subtitle">Your subscription has been activated and tokens credited to your ledger.</p>
+
+        <div class="receipt-details-card">
+          <div class="receipt-row">
+            <span>Transaction ID</span>
+            <strong id="receipt-txn-id" class="mono-code">TXN_QX_8F92A14C</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Invoice Number</span>
+            <strong id="receipt-invoice-no" class="mono-code">INV-2026-94821</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Plan Activated</span>
+            <strong id="receipt-plan-name" class="plan-pill-receipt">Pro Tier</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Amount Paid</span>
+            <strong id="receipt-amount" class="receipt-amt">₹499.00 INR</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Payment Method</span>
+            <span id="receipt-method">UPI (demo@querix)</span>
+          </div>
+          <div class="receipt-row">
+            <span>Timestamp</span>
+            <span id="receipt-time">Just now</span>
+          </div>
+          <div class="receipt-row highlight-row">
+            <span>Token Quota</span>
+            <strong id="receipt-tokens">+500,000 Tokens Ready to Use</strong>
+          </div>
+        </div>
+
+        <div class="receipt-actions-row">
+          <button id="btn-download-receipt" class="btn btn-secondary">
+            <i data-lucide="download"></i>
+            <span>Download Invoice (JSON)</span>
+          </button>
+          <button id="btn-finish-checkout" class="btn btn-primary">
+            <span>Done & Start Chatting</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3.6 Admin Dashboard & Custom FAQ Upload Modal -->
+  <div id="admin-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-xl">
+      <button class="modal-close-btn" id="close-admin-modal-btn"><i data-lucide="x"></i></button>
+      <div class="modal-header">
+        <div class="icon-wrap"><i data-lucide="bar-chart-2"></i></div>
+        <div>
+          <h3>Querix Intelligence & Admin Hub</h3>
+          <p>Real-time analytics, question coverage, and custom FAQ dataset ingestion.</p>
+        </div>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" id="tab-analytics">Analytics Dashboard</button>
+        <button class="admin-tab" id="tab-upload">Custom FAQ Upload (CSV/JSON)</button>
+      </div>
+
+      <!-- Analytics Tab View -->
+      <div id="view-analytics" class="admin-tab-view">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Total Processed Queries</span>
+            <span id="kpi-queries" class="kpi-val">42</span>
+            <span class="kpi-sub">Dual-stage NLP</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Average Confidence</span>
+            <span id="kpi-confidence" class="kpi-val">85.2%</span>
+            <span class="kpi-sub">> 0.35 threshold</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Satisfaction Rate</span>
+            <span id="kpi-satisfaction" class="kpi-val">96.0%</span>
+            <span class="kpi-sub">Thumbs Up feedback</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Active Knowledge FAQs</span>
+            <span id="kpi-faqs" class="kpi-val">65</span>
+            <span class="kpi-sub">Across 7 topics</span>
+          </div>
+        </div>
+
+        <div class="admin-columns">
+          <div class="admin-col">
+            <h4><i data-lucide="trending-up"></i> Top Asked Questions</h4>
+            <ul id="top-questions-list" class="admin-data-list">
+              <li><span>how do I get my money back?</span> <span class="badge">18 hits</span></li>
+              <li><span>What subscription plans does Querix offer?</span> <span class="badge">12 hits</span></li>
+              <li><span>How do I track my order shipment status?</span> <span class="badge">9 hits</span></li>
+            </ul>
+          </div>
+          <div class="admin-col">
+            <h4><i data-lucide="alert-triangle"></i> Low-Confidence / Unanswered Queries</h4>
+            <ul id="unanswered-list" class="admin-data-list">
+              <li><span>Can I integrate Querix with custom CRM?</span> <span class="badge badge-warn">Below 35%</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom FAQ Upload Tab View -->
+      <div id="view-upload" class="admin-tab-view" style="display: none;">
+        <div class="upload-dropzone" id="faq-dropzone">
+          <i data-lucide="upload-cloud"></i>
+          <h4>Drag & Drop your FAQ Dataset here</h4>
+          <p>Supports <code>.csv</code> and <code>.json</code> files. Retrains the TF-IDF vectorizer immediately.</p>
+          <input type="file" id="faq-file-input" accept=".csv,.json" style="display: none;">
+          <button id="browse-faq-file-btn" class="btn btn-secondary">Browse File</button>
+        </div>
+
+        <div class="dataset-sample-box">
+          <h5>Required Format Guide:</h5>
+          <pre><code>// Sample JSON format:
+[
+  {
+    "topic": "Billing & Plans",
+    "question": "Do you accept cryptocurrency payments?",
+    "answer": "Currently we process payments exclusively via cards and UPI.",
+    "keywords": ["crypto", "bitcoin", "payment methods"],
+    "intent": "crypto_payment"
+  }
+]</code></pre>
+        </div>
+
+        <div id="upload-status-alert" class="alert-box" style="display: none;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Profile & Settings Modal -->
+  <div id="profile-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <button class="modal-close-btn" id="close-profile-modal-btn"><i data-lucide="x"></i></button>
+      <div class="modal-header">
+        <div class="icon-wrap"><i data-lucide="user-check"></i></div>
+        <div>
+          <h3>User Profile & Account</h3>
+          <p>Manage credentials, data exports, and privacy compliance.</p>
+        </div>
+      </div>
+
+      <div class="profile-details-card">
+        <div class="profile-avatar-row">
+          <div class="avatar-circle" id="profile-avatar-icon"><span>Q</span></div>
+          <div>
+            <h4 id="profile-name-text">Guest User</h4>
+            <span id="profile-email-text">guest@querix.ai</span>
+          </div>
+        </div>
+
+        <div class="profile-actions-list">
+          <button id="export-history-btn" class="profile-action-btn">
+            <i data-lucide="download"></i>
+            <div>
+              <strong>Export Chat History</strong>
+              <span>Download conversation transcripts in JSON format</span>
+            </div>
+          </button>
+
+          <button id="signout-btn" class="profile-action-btn">
+            <i data-lucide="log-out"></i>
+            <div>
+              <strong>Sign Out of Session</strong>
+              <span>Clears current auth cookies and JWT</span>
+            </div>
+          </button>
+
+          <button id="delete-account-btn" class="profile-action-btn danger">
+            <i data-lucide="trash-2"></i>
+            <div>
+              <strong>Delete Account & Data (GDPR)</strong>
+              <span>Permanently purges profile, messages, and tokens</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Command Palette (Ctrl+K) -->
+  <div id="cmd-palette-modal" class="modal cmd-modal">
+    <div class="modal-backdrop"></div>
+    <div class="cmd-palette-card">
+      <div class="cmd-input-row">
+        <i data-lucide="search"></i>
+        <input type="text" id="cmd-input" placeholder="Type a command or search topics..." autocomplete="off">
+        <kbd>ESC</kbd>
+      </div>
+      <ul id="cmd-results-list" class="cmd-results-list">
+        <li class="cmd-item" data-action="new-chat">
+          <i data-lucide="plus"></i>
+          <span>Start New Chat</span>
+          <kbd>Ctrl+J</kbd>
+        </li>
+        <li class="cmd-item" data-action="voice">
+          <i data-lucide="mic"></i>
+          <span>Open Jarvix Voice Mode</span>
+          <kbd>Ctrl+M</kbd>
+        </li>
+        <li class="cmd-item" data-action="ledger">
+          <i data-lucide="gauge"></i>
+          <span>View Token Usage Ledger</span>
+        </li>
+        <li class="cmd-item" data-action="upgrade">
+          <i data-lucide="zap"></i>
+          <span>Upgrade to Pro Plan</span>
+        </li>
+        <li class="cmd-item" data-action="admin">
+          <i data-lucide="bar-chart-2"></i>
+          <span>Admin Analytics & FAQ Ingestion</span>
+        </li>
+        <li class="cmd-item" data-action="theme">
+          <i data-lucide="moon"></i>
+          <span>Toggle Dark / Light Mode</span>
+        </li>
+        <li class="cmd-item" data-action="export">
+          <i data-lucide="download"></i>
+          <span>Export Chat History</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Support Contact Modal (When low confidence) -->
+  <div id="support-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <button class="modal-close-btn" id="close-support-modal-btn"><i data-lucide="x"></i></button>
+      <div class="modal-header">
+        <div class="icon-wrap"><i data-lucide="headphones"></i></div>
+        <div>
+          <h3>Contact Specialist Support</h3>
+          <p>Our human engineering and customer success team is here to assist.</p>
+        </div>
+      </div>
+      <div class="support-content">
+        <p>Your query was flagged for human specialist review. You can reach out directly via our priority channels:</p>
+        <div class="support-channels">
+          <a href="mailto:support@querix.ai?subject=Querix%20Unanswered%20FAQ%20Query" class="support-channel-card">
+            <i data-lucide="mail"></i>
+            <div>
+              <strong>Email Support</strong>
+              <span>support@querix.ai (Avg response &lt; 2 hrs)</span>
+            </div>
+          </a>
+          <div class="support-channel-card">
+            <i data-lucide="clock"></i>
+            <div>
+              <strong>Operating Hours</strong>
+              <span>Mon–Fri: 8am–8pm EST, Sat: 9am–5pm EST</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Link Toast Notification -->
+  <div id="toast-notify" class="toast-notify">
+    <i data-lucide="check-circle"></i>
+    <span id="toast-text">Link copied to clipboard!</span>
+  </div>
+
+  <script src="app.js?v=3.8"></script>
+</body>
+</html>

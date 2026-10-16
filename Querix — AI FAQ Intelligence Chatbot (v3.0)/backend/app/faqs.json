@@ -1,0 +1,529 @@
+[
+  {
+    "id": "faq_gen_01",
+    "topic": "General",
+    "question": "What is Querix and how does it work?",
+    "answer": "Querix is an enterprise-grade AI FAQ Intelligence Chatbot designed to deliver instant, high-precision answers to customer questions. It uses NLP lemmatization, TF-IDF vectorization, cosine similarity, and fallback intent matching to deliver sub-500ms answers alongside voice agent integration.",
+    "keywords": ["querix", "overview", "what is", "how it works", "introduction", "ai chatbot"],
+    "intent": "general_inquiry"
+  },
+  {
+    "id": "faq_gen_02",
+    "topic": "General",
+    "question": "Who can I contact for business partnerships or media inquiries?",
+    "answer": "For business, media, and corporate partnership inquiries, please email partnerships@querix.ai or visit our Partners portal on querix.ai/partners.",
+    "keywords": ["partnerships", "press", "media", "business", "contact", "collaborate"],
+    "intent": "general_inquiry"
+  },
+  {
+    "id": "faq_gen_03",
+    "topic": "General",
+    "question": "What are your customer support operating hours?",
+    "answer": "Our automated AI intelligence system operates 24/7/365. Human specialist support is available Monday through Friday from 8:00 AM to 8:00 PM EST, and Saturday 9:00 AM to 5:00 PM EST via live chat and email.",
+    "keywords": ["support hours", "business hours", "operating hours", "availability", "time", "human agent"],
+    "intent": "support_hours"
+  },
+  {
+    "id": "faq_gen_04",
+    "topic": "General",
+    "question": "Where is Querix headquartered?",
+    "answer": "Querix is developed by a global distributed engineering team with headquarters in San Francisco, CA and regional hubs in Bengaluru, India and London, UK.",
+    "keywords": ["headquarters", "location", "office", "company", "address"],
+    "intent": "general_inquiry"
+  },
+  {
+    "id": "faq_gen_05",
+    "topic": "General",
+    "question": "Is Querix compliant with GDPR and CCPA privacy standards?",
+    "answer": "Yes. Querix strictly adheres to GDPR, CCPA, and SOC 2 Type II data governance standards. We do not sell user data or store unencrypted audio streams, and users can delete all personal data anytime via Settings.",
+    "keywords": ["gdpr", "ccpa", "privacy", "compliance", "data security", "regulation"],
+    "intent": "privacy_compliance"
+  },
+  {
+    "id": "faq_gen_06",
+    "topic": "General",
+    "question": "Do you offer service level agreements (SLAs) for enterprise clients?",
+    "answer": "Yes. Our Business and Enterprise tiers include guaranteed 99.9% uptime SLAs with dedicated account managers and 1-hour priority response windows.",
+    "keywords": ["sla", "uptime", "enterprise", "guarantee", "service level"],
+    "intent": "enterprise_sla"
+  },
+  {
+    "id": "faq_gen_07",
+    "topic": "General",
+    "question": "Can I use Querix in multiple languages?",
+    "answer": "Yes. Querix natively supports English, Hindi, and Hinglish with automatic language detection, conversational tokenization, and multi-lingual voice synthesis through Jarvix.",
+    "keywords": ["languages", "multilingual", "hindi", "hinglish", "english", "translation"],
+    "intent": "language_support"
+  },
+  {
+    "id": "faq_gen_08",
+    "topic": "General",
+    "question": "Where can I view Querix system status and scheduled maintenance?",
+    "answer": "You can check real-time uptime, API latency, and scheduled maintenance notices at status.querix.ai or subscribe to status updates via email and Slack.",
+    "keywords": ["status", "system status", "outage", "uptime", "maintenance", "downtime"],
+    "intent": "system_status"
+  },
+  {
+    "id": "faq_gen_09",
+    "topic": "General",
+    "question": "How do I submit product feedback or suggest a new feature?",
+    "answer": "You can provide instant feedback directly on any chat response with the 👍/👎 buttons, or submit feature requests through our community board at feedback.querix.ai.",
+    "keywords": ["feedback", "feature request", "suggest", "vote", "improvement"],
+    "intent": "feedback_submission"
+  },
+
+  {
+    "id": "faq_prod_01",
+    "topic": "Product Help",
+    "question": "How do I initiate a voice conversation with Jarvix?",
+    "answer": "Click the microphone button in the chat prompt bar or press Ctrl+M (Cmd+M on Mac). You can also click the Jarvix Voice Orb in the top header to enter immersive full-screen Voice Mode with real-time waveform visualization.",
+    "keywords": ["jarvix", "voice conversation", "mic button", "speech", "talk to jarvix", "voice mode"],
+    "intent": "voice_assistant"
+  },
+  {
+    "id": "faq_prod_02",
+    "topic": "Product Help",
+    "question": "Can I interrupt Jarvix while it is speaking (barge-in)?",
+    "answer": "Yes, Jarvix features full acoustic barge-in. Simply start speaking while Jarvix is answering, and the voice synthesis will halt instantly to prioritize your new question.",
+    "keywords": ["interrupt", "barge in", "stop speech", "silence", "cut off jarvix"],
+    "intent": "voice_assistant"
+  },
+  {
+    "id": "faq_prod_03",
+    "topic": "Product Help",
+    "question": "How does the token meter work in Querix?",
+    "answer": "Every query consumes token units calculated from the input length plus response length. Voice queries incur a small audio processing overhead. The sidebar meter displays your real-time usage and monthly quota with amber warnings at 70% and red at 90%.",
+    "keywords": ["token meter", "tokens", "usage", "quota", "how tokens work", "sidebar meter"],
+    "intent": "token_usage"
+  },
+  {
+    "id": "faq_prod_04",
+    "topic": "Product Help",
+    "question": "How do I filter questions by topic context?",
+    "answer": "In the left sidebar, click any topic category (General, Billing, Technical, etc.) to filter the knowledge context and see tailored starter questions for that domain.",
+    "keywords": ["topic filter", "categories", "filter questions", "contexts", "sidebar topics"],
+    "intent": "topic_filtering"
+  },
+  {
+    "id": "faq_prod_05",
+    "topic": "Product Help",
+    "question": "Can I export my chat conversation history?",
+    "answer": "Yes. Open your Profile modal or click the Export icon in the chat header to download your entire conversation log in JSON or Markdown format.",
+    "keywords": ["export chat", "download conversation", "history export", "save chat", "transcript"],
+    "intent": "chat_export"
+  },
+  {
+    "id": "faq_prod_06",
+    "topic": "Product Help",
+    "question": "How do I use keyboard shortcuts in Querix?",
+    "answer": "Querix supports power shortcuts: Press '/' to focus the input box, 'Ctrl+K' (or Cmd+K) to open the Command Palette, 'Ctrl+M' to toggle the voice mic, and 'Escape' to dismiss open modals.",
+    "keywords": ["keyboard shortcuts", "ctrl+k", "command palette", "hotkeys", "slash command"],
+    "intent": "keyboard_shortcuts"
+  },
+  {
+    "id": "faq_prod_07",
+    "topic": "Product Help",
+    "question": "How can I upload custom FAQ datasets?",
+    "answer": "Users on Pro and Business plans can upload custom FAQs in CSV or JSON format via the 'Custom FAQ' panel in Settings or the Admin view. The TF-IDF index retrains automatically within seconds.",
+    "keywords": ["custom faq", "upload csv", "upload json", "train dataset", "add questions"],
+    "intent": "faq_upload"
+  },
+  {
+    "id": "faq_prod_08",
+    "topic": "Product Help",
+    "question": "Can I share a specific chat conversation via link?",
+    "answer": "Yes. Click the Share icon on any answer bubble or the top action bar to generate a secure read-only link to that thread.",
+    "keywords": ["share chat", "link", "copy link", "share answer", "permalink"],
+    "intent": "share_chat"
+  },
+  {
+    "id": "faq_prod_09",
+    "topic": "Product Help",
+    "question": "How do I switch between Dark and Light mode themes?",
+    "answer": "Click the sun/moon theme toggle button in the top right header or select theme in the Command Palette (Ctrl+K). Querix remembers your preference in local storage.",
+    "keywords": ["dark mode", "light mode", "theme toggle", "color scheme", "appearance"],
+    "intent": "theme_toggle"
+  },
+
+  {
+    "id": "faq_bill_01",
+    "topic": "Billing & Plans",
+    "question": "What subscription plans does Querix offer?",
+    "answer": "Querix offers three tiers: Free (₹0/mo, 10,000 tokens/mo), Pro (₹499/mo, 500,000 tokens/mo with full voice & export), and Business (₹1,999/mo, 3,000,000 tokens/mo with API access and custom FAQ uploads).",
+    "keywords": ["plans", "pricing", "free", "pro", "business", "cost", "monthly fee"],
+    "intent": "subscription_plans"
+  },
+  {
+    "id": "faq_bill_02",
+    "topic": "Billing & Plans",
+    "question": "Is there a discount if I pay yearly instead of monthly?",
+    "answer": "Yes! Annual billing gives you 2 months completely free (paying for 10 months gives you 12 months access). You can toggle between monthly and yearly billing on the Pricing modal.",
+    "keywords": ["yearly discount", "annual plan", "2 months free", "save money", "billing frequency"],
+    "intent": "annual_discount"
+  },
+  {
+    "id": "faq_bill_03",
+    "topic": "Billing & Plans",
+    "question": "What happens when my monthly tokens run out?",
+    "answer": "When you hit 100% token usage, you experience a soft-block preventing new queries without any data loss. You can instantly purchase a 100,000 token top-up pack for ₹99 or upgrade your tier.",
+    "keywords": ["token limit reached", "exhausted tokens", "soft block", "top-up", "run out of tokens"],
+    "intent": "token_exhaustion"
+  },
+  {
+    "id": "faq_bill_04",
+    "topic": "Billing & Plans",
+    "question": "Can I buy additional token top-ups without changing my plan?",
+    "answer": "Yes! You can purchase instant Top-Up packs of +100,000 tokens for just ₹99 anytime from the sidebar Token Meter or Upgrade modal.",
+    "keywords": ["top up pack", "buy tokens", "extra tokens", "token booster", "add tokens"],
+    "intent": "token_topup"
+  },
+  {
+    "id": "faq_bill_05",
+    "topic": "Billing & Plans",
+    "question": "What payment methods are supported for subscriptions?",
+    "answer": "We accept major credit cards (Visa, MasterCard, American Express), UPI (Google Pay, PhonePe, Paytm), Net Banking, and international payments processed securely via Razorpay and Stripe.",
+    "keywords": ["payment methods", "upi", "credit card", "razorpay", "stripe", "net banking"],
+    "intent": "payment_methods"
+  },
+  {
+    "id": "faq_bill_06",
+    "topic": "Billing & Plans",
+    "question": "How do I download tax invoices and receipts?",
+    "answer": "Invoices with GST details are automatically emailed upon payment and are also downloadable under Account Settings > Invoices & Billing History.",
+    "keywords": ["invoices", "receipts", "gst invoice", "download bill", "tax invoice"],
+    "intent": "invoices"
+  },
+  {
+    "id": "faq_bill_07",
+    "topic": "Billing & Plans",
+    "question": "Can I cancel my subscription at any time?",
+    "answer": "Yes, you can cancel your subscription anytime with zero cancellation fees from Account Settings. You retain Pro or Business access until the end of your current billing period.",
+    "keywords": ["cancel subscription", "cancel plan", "stop billing", "unsubscribe", "downgrade"],
+    "intent": "cancel_subscription"
+  },
+  {
+    "id": "faq_bill_08",
+    "topic": "Billing & Plans",
+    "question": "Do you offer refunds for unused subscription time?",
+    "answer": "We offer a 7-day unconditional money-back guarantee for first-time paid subscriptions if you are not satisfied. Please review our Returns & Refunds section or contact billing@querix.ai.",
+    "keywords": ["subscription refund", "money back guarantee", "cancel refund", "billing dispute"],
+    "intent": "refund_policy"
+  },
+  {
+    "id": "faq_bill_09",
+    "topic": "Billing & Plans",
+    "question": "Do you provide educational or non-profit discounts?",
+    "answer": "Yes, verified students, educators, and registered non-profits receive an ongoing 50% discount on Pro plans. Contact education@querix.ai with proof of eligibility.",
+    "keywords": ["student discount", "educational", "ngo discount", "non-profit", "academic"],
+    "intent": "discount_inquiry"
+  },
+
+  {
+    "id": "faq_tech_01",
+    "topic": "Technical Support",
+    "question": "What NLP engine and matching algorithm powers Querix?",
+    "answer": "Querix employs an intelligent dual-stage NLP pipeline: text normalization (lowercasing, punctuation stripping, tokenization, lemmatization), TF-IDF vectorization with cosine similarity matching against FAQ representations, plus automated intent classification as a resilient fallback.",
+    "keywords": ["nlp engine", "algorithm", "tf-idf", "cosine similarity", "lemmatization", "architecture"],
+    "intent": "technical_architecture"
+  },
+  {
+    "id": "faq_tech_02",
+    "topic": "Technical Support",
+    "question": "What is the confidence threshold and how are low-confidence queries handled?",
+    "answer": "Our confidence threshold is set to 0.35 (35%). If a match scores below 0.35, the chatbot transparently states 'I'm not sure, did you mean...?', suggests the top 3 closest related questions, and provides a direct 'Contact Support' button.",
+    "keywords": ["confidence threshold", "0.35", "score", "low confidence", "did you mean", "fallback"],
+    "intent": "confidence_scoring"
+  },
+  {
+    "id": "faq_tech_03",
+    "topic": "Technical Support",
+    "question": "Why is the microphone not working in Jarvix Voice Mode?",
+    "answer": "Please verify your browser permissions for microphone access. Click the lock or camera/mic icon in the browser address bar, set Microphone to 'Allow', and refresh. Also ensure your browser supports the Web Speech API (Chrome, Edge, Safari).",
+    "keywords": ["microphone not working", "mic permission", "speech recognition error", "voice issue", "browser mic"],
+    "intent": "mic_troubleshooting"
+  },
+  {
+    "id": "faq_tech_04",
+    "topic": "Technical Support",
+    "question": "Does Querix have a REST API for developers?",
+    "answer": "Yes, Business tier accounts have access to our FastAPI REST endpoints: POST /chat, GET /usage, and POST /faq/upload. API keys can be generated from the Developer tab in Settings.",
+    "keywords": ["api access", "developer api", "rest api", "endpoints", "api key", "fastapi"],
+    "intent": "api_documentation"
+  },
+  {
+    "id": "faq_tech_05",
+    "topic": "Technical Support",
+    "question": "What browsers are supported by Querix and Jarvix?",
+    "answer": "Querix is fully certified on modern desktop and mobile browsers including Google Chrome (v90+), Microsoft Edge (v90+), Apple Safari (v15+), and Mozilla Firefox.",
+    "keywords": ["browser support", "chrome", "edge", "safari", "firefox", "compatibility"],
+    "intent": "browser_compatibility"
+  },
+  {
+    "id": "faq_tech_06",
+    "topic": "Technical Support",
+    "question": "How do I resolve 'Network Connection Error' during chat requests?",
+    "answer": "Check your internet connection and ensure corporate proxies or adblockers are not blocking WebSocket or POST requests to the backend server. You can test your connection with a ping to api.querix.ai.",
+    "keywords": ["network error", "connection failed", "timeout", "offline", "backend unreachable"],
+    "intent": "network_troubleshooting"
+  },
+  {
+    "id": "faq_tech_07",
+    "topic": "Technical Support",
+    "question": "Can Querix be self-hosted on-premises or deployed in a private VPC?",
+    "answer": "Yes, our Enterprise package includes full Docker containerization, Kubernetes Helm charts, and Air-Gapped deployment support for AWS, Azure, and Google Cloud private VPCs.",
+    "keywords": ["self hosted", "on premises", "docker", "vpc", "private cloud", "enterprise deployment"],
+    "intent": "onprem_deployment"
+  },
+  {
+    "id": "faq_tech_08",
+    "topic": "Technical Support",
+    "question": "What is the average response latency of Querix?",
+    "answer": "Our NLP matching engine executes in under 25 milliseconds locally, with total end-to-end HTTP chat latency typically clocking under 250 milliseconds.",
+    "keywords": ["latency", "speed", "response time", "performance", "benchmarks"],
+    "intent": "performance_metrics"
+  },
+
+  {
+    "id": "faq_acc_01",
+    "topic": "Account & Security",
+    "question": "How do I create a new Querix account?",
+    "answer": "Click 'Sign In' in the user menu or sidebar, then toggle to 'Sign Up'. Enter your name, email address, and a secure password. Alternatively, click 'Sign in with Google' for one-click OAuth authentication.",
+    "keywords": ["create account", "sign up", "register", "new user", "google oauth"],
+    "intent": "account_creation"
+  },
+  {
+    "id": "faq_acc_02",
+    "topic": "Account & Security",
+    "question": "How do I reset my forgotten password?",
+    "answer": "On the Sign In modal, click 'Forgot Password?'. Enter your registered email to receive a password reset token link. Follow the instructions to choose a new strong password.",
+    "keywords": ["forgot password", "reset password", "lost password", "password recovery", "change password"],
+    "intent": "password_reset"
+  },
+  {
+    "id": "faq_acc_03",
+    "topic": "Account & Security",
+    "question": "Can I use Querix without creating an account (Guest Mode)?",
+    "answer": "Yes! Querix provides a complimentary Guest Mode allowing up to 5 free queries. Once you reach 5 questions, you will be prompted to create a free account to unlock your 10,000 monthly tokens.",
+    "keywords": ["guest mode", "try without account", "free questions", "anonymous", "no login"],
+    "intent": "guest_mode"
+  },
+  {
+    "id": "faq_acc_04",
+    "topic": "Account & Security",
+    "question": "How do I change my profile name and avatar?",
+    "answer": "Click your user avatar in the bottom of the sidebar, select 'Profile Settings', update your display name, and choose from curated AI avatars or upload a custom image.",
+    "keywords": ["change name", "avatar", "profile settings", "edit profile", "photo"],
+    "intent": "profile_management"
+  },
+  {
+    "id": "faq_acc_05",
+    "topic": "Account & Security",
+    "question": "How does Querix protect my account credentials and passwords?",
+    "answer": "Passwords are cryptographically hashed using salted bcrypt. Authentication sessions use secure JSON Web Tokens (JWT) stored in HTTP-only, SameSite cookies to protect against XSS and CSRF attacks.",
+    "keywords": ["security", "password hashing", "bcrypt", "jwt", "cookie security", "encryption"],
+    "intent": "security_protocols"
+  },
+  {
+    "id": "faq_acc_06",
+    "topic": "Account & Security",
+    "question": "How can I permanently delete my Querix account and all data?",
+    "answer": "In your Profile modal, navigate to 'Account Safety' and click 'Delete Account'. This permanently purges your user profile, chat history, token records, and custom datasets in compliance with GDPR Right to Erasure.",
+    "keywords": ["delete account", "erase data", "gdpr deletion", "remove profile", "purge history"],
+    "intent": "account_deletion"
+  },
+  {
+    "id": "faq_acc_07",
+    "topic": "Account & Security",
+    "question": "Does Querix support Two-Factor Authentication (2FA)?",
+    "answer": "Yes, 2FA via Authenticator Apps (TOTP) such as Google Authenticator and 1Password is available under Account Settings > Security for all Pro and Business users.",
+    "keywords": ["2fa", "two factor authentication", "mfa", "totp", "google authenticator"],
+    "intent": "two_factor_auth"
+  },
+  {
+    "id": "faq_acc_08",
+    "topic": "Account & Security",
+    "question": "What should I do if I suspect unauthorized access to my account?",
+    "answer": "Immediately change your password in Profile Settings, click 'Revoke All Other Active Sessions', and notify security@querix.ai with details of the suspicious activity.",
+    "keywords": ["unauthorized access", "hacked", "suspicious activity", "revoke sessions", "security breach"],
+    "intent": "security_incident"
+  },
+
+  {
+    "id": "faq_ship_01",
+    "topic": "Shipping & Orders",
+    "question": "How do I track my order shipment status?",
+    "answer": "Once your order ships, you will receive an email and SMS with a real-time carrier tracking link (FedEx, BlueDart, or DHL). You can also enter your order ID in the chat to look up tracking details.",
+    "keywords": ["track order", "shipment status", "tracking number", "where is my package", "order location"],
+    "intent": "order_tracking"
+  },
+  {
+    "id": "faq_ship_02",
+    "topic": "Shipping & Orders",
+    "question": "What are your standard shipping delivery times?",
+    "answer": "Standard domestic delivery takes 2 to 4 business days. Express overnight delivery delivers within 24 hours in metro areas. International shipments typically take 5 to 9 business days.",
+    "keywords": ["delivery time", "shipping duration", "express delivery", "how long to deliver", "standard shipping"],
+    "intent": "shipping_times"
+  },
+  {
+    "id": "faq_ship_03",
+    "topic": "Shipping & Orders",
+    "question": "Do you offer free shipping?",
+    "answer": "Yes! All domestic orders over ₹999 (or $50 USD for international) qualify for complimentary standard shipping automatically applied at checkout.",
+    "keywords": ["free shipping", "shipping fees", "delivery charges", "free delivery threshold"],
+    "intent": "shipping_costs"
+  },
+  {
+    "id": "faq_ship_04",
+    "topic": "Shipping & Orders",
+    "question": "Can I change my delivery address after placing an order?",
+    "answer": "You can modify your delivery address within 2 hours of placing the order by visiting your Orders dashboard or contacting customer support immediately before dispatch.",
+    "keywords": ["change address", "update delivery address", "wrong address", "modify order address"],
+    "intent": "address_change"
+  },
+  {
+    "id": "faq_ship_05",
+    "topic": "Shipping & Orders",
+    "question": "Do you ship internationally?",
+    "answer": "Yes, we ship to over 120 countries worldwide. International shipping rates and estimated customs duties are automatically calculated at checkout based on your destination country.",
+    "keywords": ["international shipping", "worldwide delivery", "ship abroad", "customs duties"],
+    "intent": "international_shipping"
+  },
+  {
+    "id": "faq_ship_06",
+    "topic": "Shipping & Orders",
+    "question": "What happens if I am not available during the delivery attempt?",
+    "answer": "Our courier partners make up to 3 delivery attempts. The driver will call your registered contact number. You can also reschedule the delivery slot via the tracking link.",
+    "keywords": ["missed delivery", "not home", "delivery attempt", "reschedule delivery"],
+    "intent": "missed_delivery"
+  },
+  {
+    "id": "faq_ship_07",
+    "topic": "Shipping & Orders",
+    "question": "What should I do if my package arrived damaged or tampered with?",
+    "answer": "Please take clear photos of the damaged box and contents immediately, do not accept the package if visibly tampered, and email support@querix.ai within 48 hours for an instant replacement.",
+    "keywords": ["damaged package", "broken item", "tampered parcel", "damaged delivery"],
+    "intent": "damaged_shipment"
+  },
+  {
+    "id": "faq_ship_08",
+    "topic": "Shipping & Orders",
+    "question": "Can I cancel an order that has already been placed?",
+    "answer": "Orders can be canceled directly from your Orders page before they enter the 'Dispatched' state. Once dispatched, you may refuse delivery or request a return upon arrival.",
+    "keywords": ["cancel order", "stop shipment", "order cancellation", "cancel purchase"],
+    "intent": "order_cancellation"
+  },
+
+  {
+    "id": "faq_ret_01",
+    "topic": "Returns & Refunds",
+    "question": "how do I get my money back?",
+    "answer": "To get your money back, submit a refund request from your Orders or Billing page, or email refunds@querix.ai with your order ID. For physical goods, returns within 30 days qualify for a full refund. For digital subscriptions, we offer a 7-day money-back guarantee. Once approved, funds are returned to your original payment method within 5 to 7 business days.",
+    "keywords": ["how do i get my money back", "money back", "refund request", "get refund", "return money"],
+    "intent": "refund"
+  },
+  {
+    "id": "faq_ret_02",
+    "topic": "Returns & Refunds",
+    "question": "What is your standard return and refund policy window?",
+    "answer": "We offer a 30-day hassle-free return window for physical merchandise in original packaging, and a 7-day money-back guarantee for initial software subscription upgrades.",
+    "keywords": ["return policy", "refund window", "30 days", "policy duration", "return conditions"],
+    "intent": "return_policy"
+  },
+  {
+    "id": "faq_ret_03",
+    "topic": "Returns & Refunds",
+    "question": "How long does it take for a refund to show on my bank or credit card statement?",
+    "answer": "Approved refunds are initiated immediately. Depending on your financial institution, UPI and net banking refunds appear within 24 to 48 hours, while credit/debit card refunds take 5 to 7 business days.",
+    "keywords": ["how long refund takes", "refund timeline", "bank refund", "credit card refund", "processing time"],
+    "intent": "refund_timeline"
+  },
+  {
+    "id": "faq_ret_04",
+    "topic": "Returns & Refunds",
+    "question": "Do I have to pay return shipping fees for physical returns?",
+    "answer": "No. We provide pre-paid return shipping labels for all domestic returns. Simply print the return label, attach it to your parcel, and schedule a free doorstep pickup.",
+    "keywords": ["return shipping fee", "prepaid label", "return cost", "doorstep pickup"],
+    "intent": "return_shipping_cost"
+  },
+  {
+    "id": "faq_ret_05",
+    "topic": "Returns & Refunds",
+    "question": "Can I exchange an item for a different model or color instead of a refund?",
+    "answer": "Yes! When initiating a return on our portal, choose 'Exchange' instead of 'Refund'. We will dispatch your replacement as soon as the courier scans the returned item.",
+    "keywords": ["exchange item", "replacement", "swap model", "exchange instead of refund"],
+    "intent": "item_exchange"
+  },
+  {
+    "id": "faq_ret_06",
+    "topic": "Returns & Refunds",
+    "question": "What items are non-returnable and non-refundable?",
+    "answer": "Gift cards, downloadable developer source licenses, and custom bespoke enterprise training models are non-refundable once delivered.",
+    "keywords": ["non returnable", "exceptions", "final sale", "gift cards", "non refundable items"],
+    "intent": "return_exceptions"
+  },
+  {
+    "id": "faq_ret_07",
+    "topic": "Returns & Refunds",
+    "question": "What if my refund amount is incorrect or missing?",
+    "answer": "If your refund does not match your expected invoice total or if taxes/promotions were deducted erroneously, please reach out to billing@querix.ai with your transaction ARN number for immediate correction.",
+    "keywords": ["wrong refund amount", "missing refund", "partial refund", "dispute refund"],
+    "intent": "refund_dispute"
+  },
+  {
+    "id": "faq_ret_08",
+    "topic": "Returns & Refunds",
+    "question": "Can I receive my refund as store credit or tokens?",
+    "answer": "Yes! You can choose to receive your refund in Querix Token Credits with an instant 10% bonus added to your balance.",
+    "keywords": ["store credit", "token credits", "bonus refund", "credit refund"],
+    "intent": "store_credit_refund"
+  },
+  {
+    "id": "faq_ret_09",
+    "topic": "Returns & Refunds",
+    "question": "How do I print a return shipping label?",
+    "answer": "Log in to your account, open the Returns Center, select your order and reason, and click 'Print Pre-Paid Shipping Label'. A PDF download will be generated automatically.",
+    "keywords": ["print label", "return shipping label", "download label", "shipping slip"],
+    "intent": "return_label"
+  },
+  {
+    "id": "faq_prod_10",
+    "topic": "Product Help",
+    "question": "Does Querix offer voice speed and pitch controls?",
+    "answer": "Yes. Inside Jarvix Voice Settings, you can customize speech rate (0.75x to 1.5x), pitch, and select between different regional voice synthesis engines.",
+    "keywords": ["voice speed", "pitch", "audio settings", "voice rate", "jarvix speech rate"],
+    "intent": "voice_assistant"
+  },
+  {
+    "id": "faq_bill_10",
+    "topic": "Billing & Plans",
+    "question": "What happens if my credit card payment fails during renewal?",
+    "answer": "We provide a 3-day grace period during which we will attempt two automatic retries. You will receive an email alert with a direct link to update your payment details without losing access.",
+    "keywords": ["failed payment", "declined card", "grace period", "renewal failure", "retry payment"],
+    "intent": "payment_failure"
+  },
+  {
+    "id": "faq_tech_09",
+    "topic": "Technical Support",
+    "question": "What is the token cost breakdown per text and voice query?",
+    "answer": "A standard text query consumes approximately 1 token unit per 4 characters processed (input + answer). A voice query includes a fixed audio recognition overhead of 15 tokens plus response generation.",
+    "keywords": ["token cost", "token calculation", "cost breakdown", "voice token penalty", "token rate"],
+    "intent": "token_calculation"
+  },
+  {
+    "id": "faq_acc_09",
+    "topic": "Account & Security",
+    "question": "Can I invite team members and manage role-based seats?",
+    "answer": "Business tier organizations include up to 5 team seats with Admin, Editor, and Viewer permission roles manageable under Team Settings.",
+    "keywords": ["team seats", "invite users", "roles", "collaborators", "team management"],
+    "intent": "team_management"
+  },
+  {
+    "id": "faq_ship_09",
+    "topic": "Shipping & Orders",
+    "question": "Do you deliver on weekends or public holidays?",
+    "answer": "Weekend deliveries are available in major metropolitan zones with Express shipping. Standard shipments are delivered Monday through Saturday excluding national holidays.",
+    "keywords": ["weekend delivery", "sunday delivery", "holiday shipping", "express weekend"],
+    "intent": "weekend_delivery"
+  }
+]
+

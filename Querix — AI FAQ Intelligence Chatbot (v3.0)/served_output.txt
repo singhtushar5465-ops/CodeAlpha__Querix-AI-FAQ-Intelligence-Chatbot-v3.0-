@@ -1,0 +1,1932 @@
+1: /**
+2:  * Querix v3.0 — AI FAQ Intelligence Chatbot Engine
+3:  * Frontend Controller & Voice Agent (Jarvix)
+4:  */
+5: 
+6: document.addEventListener('DOMContentLoaded', () => {
+7:   // Initialize Lucide icons
+8:   if (window.lucide) {
+9:     window.lucide.createIcons();
+10:   }
+11: 
+12:   // State Management
+13:   const state = {
+14:     user: null, // null = guest mode
+15:     guestId: localStorage.getItem('querix_guest_id') || ('guest_' + Math.random().toString(36).substring(2, 9)),
+16:     currentTopic: 'All',
+17:     sessionId: 'session_' + Date.now(),
+18:     tokensUsed: 0,
+19:     tokenLimit: 10000,
+20:     guestQuestionsLeft: 5,
+21:     plan: 'Free',
+22:     isVoiceModalOpen: false,
+23:     voiceState: 'IDLE', // 'IDLE', 'LISTENING', 'THINKING', 'SPEAKING'
+24:     autoReadAnswers: true,
+25:     speechLang: 'en-US',
+26:     speechSpeed: 1.0,
+27:     billingCycle: 'monthly',
+28:     chatHistory: [],
+29:     theme: localStorage.getItem('querix_theme') || 'dark'
+30:   };
+31: 
+32:   localStorage.setItem('querix_guest_id', state.guestId);
+33: 
+34:   // Dynamic API Base URL (Supports localhost:8000, 127.0.0.1, and file:// preview)
+35:   const API_BASE = (window.location.protocol === 'file:' || (window.location.port !== '8000' && window.location.hostname === 'localhost'))
+36:     ? 'http://127.0.0.1:8000'
+37:     : '';
+38: 
+39:   // Apply Theme
+40:   document.documentElement.setAttribute('data-theme', state.theme);
+41: 
+42:   // DOM Elements
+43:   const sidebar = document.getElementById('sidebar');
+44: 
+45:   const sidebarOverlay = document.getElementById('sidebar-overlay');
+46:   const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
+47:   const closeSidebarMobile = document.getElementById('close-sidebar-mobile');
+48:   const newChatBtn = document.getElementById('new-chat-btn');
+49:   const topicList = document.getElementById('topic-list');
+50:   const activeContextBadge = document.getElementById('active-context-badge');
+51:   const inputTopicTag = document.getElementById('input-topic-tag');
+52: 
+53:   const chatScrollArea = document.getElementById('chat-scroll-area');
+54:   const emptyState = document.getElementById('empty-state');
+55:   const messageList = document.getElementById('message-list');
+56:   const typingIndicator = document.getElementById('typing-indicator');
+57:   const chatForm = document.getElementById('chat-form');
+58:   const chatTextarea = document.getElementById('chat-textarea');
+59:   const micBtn = document.getElementById('mic-btn');
+60:   const inputTokenEst = document.getElementById('input-token-est');
+61: 
+62:   // Token Meter Elements
+63:   const tokenUsedText = document.getElementById('token-used-text');
+64:   const tokenLimitText = document.getElementById('token-limit-text');
+65:   const tokenProgressBar = document.getElementById('token-progress-bar');
+66:   const tokenPctText = document.getElementById('token-pct-text');
+67:   const planBadgeLabel = document.getElementById('plan-badge-label');
+68:   const userMenuBtn = document.getElementById('user-menu-btn');
+69:   const userNameDisplay = document.getElementById('user-name-display');
+70:   const userStatusDisplay = document.getElementById('user-status-display');
+71:   const userAvatarBadge = document.getElementById('user-avatar-badge');
+72: 
+73:   // Modals
+74:   const voiceModal = document.getElementById('voice-modal');
+75:   const closeVoiceModalBtn = document.getElementById('close-voice-modal-btn');
+76:   const voiceStatePill = document.getElementById('voice-state-pill');
+77:   const orbStateText = document.getElementById('orb-state-text');
+78:   const voiceTranscriptText = document.getElementById('voice-transcript-text');
+79:   const voiceAnswerBox = document.getElementById('voice-answer-box');
+80:   const voiceAnswerText = document.getElementById('voice-answer-text');
+81:   const voiceMatchBadge = document.getElementById('voice-match-badge');
+82:   const voiceTopicLabel = document.getElementById('voice-topic-label');
+83:   const voiceListenToggleBtn = document.getElementById('voice-listen-toggle-btn');
+84:   const voiceToggleLabel = document.getElementById('voice-toggle-label');
+85:   const voiceInterruptBtn = document.getElementById('voice-interrupt-btn');
+86:   const voiceLangSelect = document.getElementById('voice-lang-select');
+87:   const voiceSpeedSelect = document.getElementById('voice-speed-select');
+88:   const autoSpeakToggle = document.getElementById('auto-speak-toggle');
+89:   const voiceAudioMeterFill = document.getElementById('audio-meter-fill');
+90:   const audioStatusTag = document.getElementById('audio-status-tag');
+91:   const voiceMicAlert = document.getElementById('voice-mic-alert');
+92:   const voiceMicAlertTitle = document.getElementById('voice-mic-alert-title');
+93:   const voiceMicAlertDesc = document.getElementById('voice-mic-alert-desc');
+94:   const btnRequestMic = document.getElementById('btn-request-mic');
+95: 
+96:   const authModal = document.getElementById('auth-modal');
+97:   const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
+98:   const tabSignup = document.getElementById('tab-signup');
+99:   const tabLogin = document.getElementById('tab-login');
+100:   const groupName = document.getElementById('group-name');
+101:   const authForm = document.getElementById('auth-form');
+102:   const authName = document.getElementById('auth-name');
+103:   const authEmail = document.getElementById('auth-email');
+104:   const authPassword = document.getElementById('auth-password');
+105:   const authSubmitBtn = document.getElementById('auth-submit-btn');
+106:   const authErrorMsg = document.getElementById('auth-error-msg');
+107:   const authModalTitle = document.getElementById('auth-modal-title');
+108:   const authModalSub = document.getElementById('auth-modal-sub');
+109:   const googleAuthBtn = document.getElementById('google-auth-btn');
+110: 
+111:   const ledgerModal = document.getElementById('ledger-modal');
+112:   const closeLedgerModalBtn = document.getElementById('close-ledger-modal-btn');
+113:   const viewLedgerBtn = document.getElementById('view-ledger-btn');
+114:   const ledgerPlanVal = document.getElementById('ledger-plan-val');
+115:   const ledgerUsedVal = document.getElementById('ledger-used-val');
+116:   const ledgerLimitVal = document.getElementById('ledger-limit-val');
+117:   const ledgerPctVal = document.getElementById('ledger-pct-val');
+118:   const ledgerTableBody = document.getElementById('ledger-table-body');
+119:   const ledgerTopupBtn = document.getElementById('ledger-topup-btn');
+120:   const ledgerUpgradeBtn = document.getElementById('ledger-upgrade-btn');
+121: 
+122:   const pricingModal = document.getElementById('pricing-modal');
+123:   const closePricingModalBtn = document.getElementById('close-pricing-modal-btn');
+124:   const sidebarUpgradeBtn = document.getElementById('sidebar-upgrade-btn');
+125:   const billingCycleSwitch = document.getElementById('billing-cycle-switch');
+126:   const proPriceVal = document.getElementById('pro-price-val');
+127:   const proPeriodVal = document.getElementById('pro-period-val');
+128:   const bizPriceVal = document.getElementById('biz-price-val');
+129:   const bizPeriodVal = document.getElementById('biz-period-val');
+130:   const upgradeProBtn = document.getElementById('upgrade-pro-btn');
+131:   const upgradeBizBtn = document.getElementById('upgrade-biz-btn');
+132:   const quickTopupBtn = document.getElementById('quick-topup-btn');
+133: 
+134:   // Checkout Modal Elements
+135:   const checkoutModal = document.getElementById('checkout-modal');
+136:   const closeCheckoutModalBtn = document.getElementById('close-checkout-modal-btn');
+137:   const checkoutViewForm = document.getElementById('checkout-view-form');
+138:   const checkoutViewReceipt = document.getElementById('checkout-view-receipt');
+139:   const summaryPlanName = document.getElementById('summary-plan-name');
+140:   const summaryPlanCycle = document.getElementById('summary-plan-cycle');
+141:   const summaryPlanTokens = document.getElementById('summary-plan-tokens');
+142:   const checkoutCustomerName = document.getElementById('checkout-customer-name');
+143:   const checkoutCustomerEmail = document.getElementById('checkout-customer-email');
+144:   const checkoutPromoInput = document.getElementById('checkout-promo-input');
+145:   const btnApplyPromo = document.getElementById('btn-apply-promo');
+146:   const promoStatusMsg = document.getElementById('promo-status-msg');
+147:   const summarySubtotal = document.getElementById('summary-subtotal');
+148:   const summaryDiscountRow = document.getElementById('summary-discount-row');
+149:   const summaryDiscountVal = document.getElementById('summary-discount-val');
+150:   const summaryTax = document.getElementById('summary-tax');
+151:   const summaryTotalAmount = document.getElementById('summary-total-amount');
+152:   const btnCompletePayment = document.getElementById('btn-complete-payment');
+153:   const btnPayLabel = document.getElementById('btn-pay-label');
+154:   const btnFillDemoCard = document.getElementById('btn-fill-demo-card');
+155:   const btnVerifyUpi = document.getElementById('btn-verify-upi');
+156:   const checkoutUpiId = document.getElementById('checkout-upi-id');
+157:   const btnDownloadReceipt = document.getElementById('btn-download-receipt');
+158:   const btnFinishCheckout = document.getElementById('btn-finish-checkout');
+159: 
+160:   const adminModal = document.getElementById('admin-modal');
+161:   const headerAdminBtn = document.getElementById('header-admin-btn');
+162:   const closeAdminModalBtn = document.getElementById('close-admin-modal-btn');
+163:   const tabAnalytics = document.getElementById('tab-analytics');
+164:   const tabUpload = document.getElementById('tab-upload');
+165:   const viewAnalytics = document.getElementById('view-analytics');
+166:   const viewUpload = document.getElementById('view-upload');
+167:   const faqDropzone = document.getElementById('faq-dropzone');
+168:   const faqFileInput = document.getElementById('faq-file-input');
+169:   const browseFaqFileBtn = document.getElementById('browse-faq-file-btn');
+170:   const uploadStatusAlert = document.getElementById('upload-status-alert');
+171: 
+172:   const profileModal = document.getElementById('profile-modal');
+173:   const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
+174:   const profileNameText = document.getElementById('profile-name-text');
+175:   const profileEmailText = document.getElementById('profile-email-text');
+176:   const exportHistoryBtn = document.getElementById('export-history-btn');
+177:   const signoutBtn = document.getElementById('signout-btn');
+178:   const deleteAccountBtn = document.getElementById('delete-account-btn');
+179: 
+180:   const cmdPaletteModal = document.getElementById('cmd-palette-modal');
+181:   const headerCmdBtn = document.getElementById('header-cmd-btn');
+182:   const cmdInput = document.getElementById('cmd-input');
+183:   const cmdResultsList = document.getElementById('cmd-results-list');
+184: 
+185:   const supportModal = document.getElementById('support-modal');
+186:   const closeSupportModalBtn = document.getElementById('close-support-modal-btn');
+187:   const toastNotify = document.getElementById('toast-notify');
+188:   const toastText = document.getElementById('toast-text');
+189:   const headerVoiceBtn = document.getElementById('header-voice-btn');
+190:   const themeToggleBtn = document.getElementById('theme-toggle-btn');
+191: 
+192:   // =========================================================================
+193:   // 3D Canvas Voice Orb Animation (Jarvix)
+194:   // =========================================================================
+195:   const canvas = document.getElementById('voice-orb-canvas');
+196: 
+197:   const ctx = canvas.getContext('2d');
+198:   let animationFrameId = null;
+199:   let orbAngle = 0;
+200: 
+201:   function renderVoiceOrb() {
+202:     ctx.clearRect(0, 0, canvas.width, canvas.height);
+203:     const centerX = canvas.width / 2;
+204:     const centerY = canvas.height / 2;
+205:     orbAngle += 0.03;
+206: 
+207:     let baseRadius = 46;
+208:     let primaryColor = 'rgba(108, 92, 231, ';
+209:     let secondaryColor = 'rgba(0, 212, 255, ';
+210: 
+211:     if (state.voiceState === 'LISTENING') {
+212:       baseRadius = 54 + Math.sin(orbAngle * 4) * 8;
+213:       primaryColor = 'rgba(245, 166, 35, ';
+214:       secondaryColor = 'rgba(0, 212, 255, ';
+215:     } else if (state.voiceState === 'THINKING') {
+216:       baseRadius = 50 + Math.cos(orbAngle * 6) * 6;
+217:       primaryColor = 'rgba(255, 107, 157, ';
+218:       secondaryColor = 'rgba(108, 92, 231, ';
+219:     } else if (state.voiceState === 'SPEAKING') {
+220:       baseRadius = 58 + Math.sin(orbAngle * 5) * 10;
+221:       primaryColor = 'rgba(0, 212, 255, ';
+222:       secondaryColor = 'rgba(46, 204, 113, ';
+223:     } else {
+224:       // IDLE breathing
+225:       baseRadius = 46 + Math.sin(orbAngle * 1.5) * 4;
+226:     }
+227: 
+228:     // Outer Halo
+229:     const outerGrad = ctx.createRadialGradient(centerX, centerY, baseRadius * 0.4, centerX, centerY, baseRadius * 1.8);
+230:     outerGrad.addColorStop(0, primaryColor + '0.5)');
+231:     outerGrad.addColorStop(0.6, secondaryColor + '0.2)');
+232:     outerGrad.addColorStop(1, 'transparent');
+233:     ctx.fillStyle = outerGrad;
+234:     ctx.beginPath();
+235:     ctx.arc(centerX, centerY, baseRadius * 1.8, 0, Math.PI * 2);
+236:     ctx.fill();
+237: 
+238:     // Multi-Layer Harmonic Wave Rings
+239:     const layers = state.voiceState === 'SPEAKING' ? 6 : 4;
+240:     for (let i = 0; i < layers; i++) {
+241:       ctx.beginPath();
+242:       const phase = orbAngle * (i % 2 === 0 ? 1 : -1) + (i * Math.PI) / 3;
+243:       const waveCount = 8;
+244:       for (let a = 0; a <= Math.PI * 2; a += 0.05) {
+245:         const distortion = Math.sin(a * waveCount + phase) * (state.voiceState === 'IDLE' ? 4 : 14);
+246:         const r = baseRadius + distortion;
+247:         const x = centerX + Math.cos(a) * r;
+248:         const y = centerY + Math.sin(a) * r;
+249:         if (a === 0) ctx.moveTo(x, y);
+250:         else ctx.lineTo(x, y);
+251:       }
+252:       ctx.closePath();
+253:       ctx.strokeStyle = i % 2 === 0 ? primaryColor + '0.8)' : secondaryColor + '0.8)';
+254:       ctx.lineWidth = 2.2;
+255:       ctx.stroke();
+256:     }
+257: 
+258:     // Core Radiant Sphere
+259:     const coreGrad = ctx.createRadialGradient(centerX - 15, centerY - 15, 5, centerX, centerY, baseRadius);
+260:     coreGrad.addColorStop(0, '#FFFFFF');
+261:     coreGrad.addColorStop(0.4, primaryColor + '0.9)');
+262:     coreGrad.addColorStop(1, secondaryColor + '1)');
+263:     ctx.fillStyle = coreGrad;
+264:     ctx.beginPath();
+265:     ctx.arc(centerX, centerY, baseRadius * 0.75, 0, Math.PI * 2);
+266:     ctx.fill();
+267: 
+268:     animationFrameId = requestAnimationFrame(renderVoiceOrb);
+269:   }
+270: 
+271:   function setVoiceState(newState, textHint) {
+272:     state.voiceState = newState;
+273:     voiceStatePill.textContent = newState;
+274:     if (textHint) orbStateText.textContent = textHint;
+275: 
+276:     if (newState === 'LISTENING') {
+277:       voiceStatePill.style.borderColor = 'var(--status-warning)';
+278:       voiceStatePill.style.color = 'var(--status-warning)';
+279:       voiceListenToggleBtn.classList.add('btn-primary');
+280:       voiceToggleLabel.textContent = 'Listening…';
+281:     } else if (newState === 'SPEAKING') {
+282:       voiceStatePill.style.borderColor = 'var(--status-info)';
+283:       voiceStatePill.style.color = 'var(--status-info)';
+284:       voiceToggleLabel.textContent = 'Speaking Answer';
+285:     } else {
+286:       voiceStatePill.style.borderColor = 'var(--brand-cyan)';
+287:       voiceStatePill.style.color = 'var(--brand-cyan)';
+288:       voiceToggleLabel.textContent = 'Start Listening';
+289:     }
+290:   }
+291: 
+292:   // =========================================================================
+293:   // Web Speech API (STT & TTS with Barge-In & Silence Debounce)
+294:   // =========================================================================
+295:   let recognition = null;
+296:   let synth = window.speechSynthesis;
+297:   let isSpeechActive = false;
+298:   let accumulatedSpeech = '';
+299:   let speechSilenceTimer = null;
+300:   let hasSubmittedCurrentSpeech = false;
+301:   let micAudioLevelInterval = null;
+302: 
+303:   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+304: 
+305:   if (SpeechRecognition) {
+306:     recognition = new SpeechRecognition();
+307:     recognition.continuous = true;
+308:     recognition.interimResults = true;
+309: 
+310:     recognition.onstart = () => {
+311:       isSpeechActive = true;
+312:       hasSubmittedCurrentSpeech = false;
+313:       micBtn.classList.add('active');
+314:       setVoiceState('LISTENING', 'Listening… speak clearly into your microphone');
+315:       startAudioMeterAnimation();
+316:       if (voiceMicAlert) voiceMicAlert.style.display = 'none';
+317:     };
+318: 
+319:     recognition.onresult = (event) => {
+320:       let interimTranscript = '';
+321:       let finalTranscript = '';
+322: 
+323:       for (let i = event.resultIndex; i < event.results.length; ++i) {
+324:         const trans = event.results[i][0].transcript;
+325:         if (event.results[i].isFinal) {
+326:           finalTranscript += trans;
+327:         } else {
+328:           interimTranscript += trans;
+329:         }
+330:       }
+331: 
+332:       const display = (finalTranscript || interimTranscript || '').trim();
+333:       if (display) {
+334:         accumulatedSpeech = display;
+335:         voiceTranscriptText.textContent = `"${display}"`;
+336:         chatTextarea.value = display;
+337:         hasSubmittedCurrentSpeech = false;
+338: 
+339:         // Auto-submit after 850ms pause in speech
+340:         clearTimeout(speechSilenceTimer);
+341:         speechSilenceTimer = setTimeout(() => {
+342:           if (accumulatedSpeech.trim() && !hasSubmittedCurrentSpeech && state.voiceState === 'LISTENING') {
+343:             submitVoiceQuery(accumulatedSpeech.trim());
+344:           }
+345:         }, 850);
+346:       }
+347:     };
+348: 
+349:     recognition.onerror = (event) => {
+350:       console.warn('Speech recognition error:', event.error);
+351:       micBtn.classList.remove('active');
+352:       stopAudioMeterAnimation();
+353: 
+354:       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+355:         if (voiceMicAlert) {
+356:           voiceMicAlert.style.display = 'flex';
+357:           voiceMicAlertTitle.textContent = 'Microphone Blocked';
+358:           voiceMicAlertDesc.textContent = 'Click "Allow Mic" or tap the lock icon in the browser URL bar. Or click any test question chip below!';
+359:         }
+360:         setVoiceState('IDLE', 'Mic permission blocked. Tap question chip or orb.');
+361:       } else if (event.error === 'network') {
+362:         if (voiceMicAlert) {
+363:           voiceMicAlert.style.display = 'flex';
+364:           voiceMicAlertTitle.textContent = 'Speech Network Delay';
+365:           voiceMicAlertDesc.textContent = 'Google Speech API is momentarily slow. Click any prompt chip below to test Jarvix voice immediately.';
+366:         }
+367:         setVoiceState('IDLE', 'Network delay. Tap quick chip below.');
+368:       } else if (event.error === 'no-speech') {
+369:         if (state.voiceState === 'LISTENING') {
+370:           setVoiceState('LISTENING', 'Still listening… speak clearly into your mic');
+371:         }
+372:       } else {
+373:         setVoiceState('IDLE', 'Tap orb or chip below to speak');
+374:       }
+375:     };
+376: 
+377:     recognition.onend = () => {
+378:       isSpeechActive = false;
+379:       micBtn.classList.remove('active');
+380:       stopAudioMeterAnimation();
+381: 
+382:       // If speech was pending when recognition ended, submit immediately!
+383:       if (accumulatedSpeech.trim() && !hasSubmittedCurrentSpeech && state.voiceState === 'LISTENING') {
+384:         submitVoiceQuery(accumulatedSpeech.trim());
+385:         return;
+386:       }
+387: 
+388:       // Smooth auto-restart if modal is open and in LISTENING state
+389:       if (state.isVoiceModalOpen && state.voiceState === 'LISTENING') {
+390:         setTimeout(() => {
+391:           if (state.isVoiceModalOpen && state.voiceState === 'LISTENING' && !isSpeechActive) {
+392:             startListening();
+393:           }
+394:         }, 300);
+395:       }
+396:     };
+397:   }
+398: 
+399:   function startAudioMeterAnimation() {
+400:     stopAudioMeterAnimation();
+401:     if (!voiceAudioMeterFill) return;
+402:     if (audioStatusTag) {
+403:       audioStatusTag.textContent = 'Listening';
+404:       audioStatusTag.style.color = 'var(--brand-cyan)';
+405:     }
+406: 
+407:     micAudioLevelInterval = setInterval(() => {
+408:       if (state.voiceState === 'LISTENING') {
+409:         const level = Math.floor(25 + Math.random() * 65);
+410:         voiceAudioMeterFill.style.width = `${level}%`;
+411:       } else if (state.voiceState === 'SPEAKING') {
+412:         const level = Math.floor(35 + Math.sin(Date.now() / 90) * 45);
+413:         voiceAudioMeterFill.style.width = `${level}%`;
+414:       } else {
+415:         voiceAudioMeterFill.style.width = '0%';
+416:       }
+417:     }, 100);
+418:   }
+419: 
+420:   function stopAudioMeterAnimation() {
+421:     if (micAudioLevelInterval) {
+422:       clearInterval(micAudioLevelInterval);
+423:       micAudioLevelInterval = null;
+424:     }
+425:     if (voiceAudioMeterFill) voiceAudioMeterFill.style.width = '0%';
+426:     if (audioStatusTag) {
+427:       audioStatusTag.textContent = state.voiceState;
+428:       audioStatusTag.style.color = state.voiceState === 'SPEAKING' ? 'var(--status-info)' : 'var(--text-dim)';
+429:     }
+430:   }
+431: 
+432:   function submitVoiceQuery(text) {
+433:     if (!text || hasSubmittedCurrentSpeech) return;
+434:     hasSubmittedCurrentSpeech = true;
+435:     clearTimeout(speechSilenceTimer);
+436:     stopListening();
+437:     setVoiceState('THINKING', 'Jarvix is consulting knowledge base…');
+438:     handleUserQuery(text, true);
+439:   }
+440: 
+441:   function startListening() {
+442:     interruptSpeech();
+443:     accumulatedSpeech = '';
+444:     hasSubmittedCurrentSpeech = false;
+445: 
+446:     if (!recognition) {
+447:       if (voiceMicAlert) {
+448:         voiceMicAlert.style.display = 'flex';
+449:         voiceMicAlertTitle.textContent = 'Speech Recognition Unsupported';
+450:         voiceMicAlertDesc.textContent = 'Speech recognition is not available in this browser. Please click the quick question chips below to test!';
+451:       }
+452:       return;
+453:     }
+454: 
+455:     try {
+456:       recognition.lang = state.speechLang === 'hinglish' ? 'hi-IN' : state.speechLang;
+457:       recognition.start();
+458:     } catch (e) {
+459:       if (e.name !== 'InvalidStateError') {
+460:         console.warn('Recognition start exception:', e);
+461:       }
+462:     }
+463:   }
+464: 
+465:   function stopListening() {
+466:     if (recognition && isSpeechActive) {
+467:       try {
+468:         recognition.stop();
+469:       } catch (e) {}
+470:     }
+471:     isSpeechActive = false;
+472:     stopAudioMeterAnimation();
+473:   }
+474: 
+475:   function interruptSpeech() {
+476:     if (synth && (synth.speaking || synth.pending)) {
+477:       synth.cancel();
+478:       setVoiceState('IDLE', 'Interrupted. Speak your next question.');
+479:       stopAudioMeterAnimation();
+480:     }
+481:   }
+482: 
+483:   function speakText(text) {
+484:     if (!synth || !state.autoReadAnswers) return;
+485:     try {
+486:       synth.cancel();
+487:       if (synth.paused) synth.resume();
+488: 
+489:       const cleanSpeech = text.replace(/[*_#`]/g, '').slice(0, 360);
+490:       const utterance = new SpeechSynthesisUtterance(cleanSpeech);
+491:       utterance.rate = state.speechSpeed;
+492:       utterance.lang = state.speechLang === 'hinglish' ? 'en-IN' : state.speechLang;
+493: 
+494:       // Select voice if available
+495:       const voices = synth.getVoices();
+496:       if (voices.length > 0) {
+497:         const bestVoice = voices.find(v => v.lang.includes('IN') || v.lang.includes('hi')) ||
+498:                           voices.find(v => v.lang.includes('en') && v.name.includes('Google')) ||
+499:                           voices.find(v => v.lang.includes('en')) ||
+500:                           voices[0];
+501:         if (bestVoice) utterance.voice = bestVoice;
+502:       }
+503: 
+504:       utterance.onstart = () => {
+505:         setVoiceState('SPEAKING', 'Jarvix is answering aloud… (Tap to interrupt)');
+506:         startAudioMeterAnimation();
+507:       };
+508: 
+509:       utterance.onend = () => {
+510:         setVoiceState('IDLE', 'Tap orb or speak to ask another question');
+511:         stopAudioMeterAnimation();
+512:         // Hands-free follow up
+513:         if (state.isVoiceModalOpen) {
+514:           setTimeout(() => {
+515:             if (state.isVoiceModalOpen && state.voiceState === 'IDLE') {
+516:               startListening();
+517:             }
+518:           }, 1200);
+519:         }
+520:       };
+521: 
+522:       utterance.onerror = () => {
+523:         setVoiceState('IDLE', 'Finished speaking.');
+524:         stopAudioMeterAnimation();
+525:       };
+526: 
+527:       synth.speak(utterance);
+528:     } catch (err) {
+529:       console.warn('Speech synthesis error:', err);
+530:       setVoiceState('IDLE', 'Answer displayed.');
+531:       stopAudioMeterAnimation();
+532:     }
+533:   }
+534: 
+535:   // Voice Modal Toggles
+536:   function openVoiceModal() {
+537:     state.isVoiceModalOpen = true;
+538:     voiceModal.classList.add('active');
+539:     if (!animationFrameId) renderVoiceOrb();
+540:     if (window.lucide) window.lucide.createIcons();
+541:     startListening();
+542:   }
+543: 
+544:   function closeVoiceModal() {
+545:     state.isVoiceModalOpen = false;
+546:     voiceModal.classList.remove('active');
+547:     stopListening();
+548:     interruptSpeech();
+549:   }
+550: 
+551:   // Listeners for Voice Mode
+552:   canvas.addEventListener('click', () => {
+553:     if (synth && synth.speaking) {
+554:       interruptSpeech();
+555:     } else if (state.voiceState === 'LISTENING') {
+556:       stopListening();
+557:     } else {
+558:       startListening();
+559:     }
+560:   });
+561: 
+562:   voiceListenToggleBtn.addEventListener('click', () => {
+563:     if (state.voiceState === 'LISTENING') stopListening();
+564:     else startListening();
+565:   });
+566: 
+567:   voiceInterruptBtn.addEventListener('click', interruptSpeech);
+568:   headerVoiceBtn.addEventListener('click', openVoiceModal);
+569:   closeVoiceModalBtn.addEventListener('click', closeVoiceModal);
+570: 
+571:   const voiceFloatingClose = document.getElementById('voice-floating-close');
+572:   if (voiceFloatingClose) {
+573:     voiceFloatingClose.addEventListener('click', closeVoiceModal);
+574:   }
+575:   const voiceModalBackdrop = document.getElementById('voice-modal-backdrop');
+576:   if (voiceModalBackdrop) {
+577:     voiceModalBackdrop.addEventListener('click', closeVoiceModal);
+578:   }
+579: 
+580:   micBtn.addEventListener('click', () => {
+581:     openVoiceModal();
+582:   });
+583: 
+584:   if (btnRequestMic) {
+585:     btnRequestMic.addEventListener('click', async () => {
+586:       try {
+587:         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+588:         if (voiceMicAlert) voiceMicAlert.style.display = 'none';
+589:         showToast('Microphone access enabled!');
+590:         stream.getTracks().forEach(t => t.stop());
+591:         startListening();
+592:       } catch (err) {
+593:         alert('Microphone permission denied. Please allow microphone in browser URL settings.');
+594:       }
+595:     });
+596:   }
+597: 
+598:   // Quick Voice Chips: test immediately
+599:   document.querySelectorAll('.voice-demo-chip').forEach(chip => {
+600:     chip.addEventListener('click', () => {
+601:       const q = chip.dataset.speak;
+602:       accumulatedSpeech = q;
+603:       voiceTranscriptText.textContent = `"${q}"`;
+604:       chatTextarea.value = q;
+605:       submitVoiceQuery(q);
+606:     });
+607:   });
+608: 
+609:   if (voiceLangSelect) {
+610:     voiceLangSelect.addEventListener('change', (e) => {
+611:       state.speechLang = e.target.value;
+612:       showToast(`Voice language switched to ${e.target.options[e.target.selectedIndex].text}`);
+613:       if (state.voiceState === 'LISTENING') {
+614:         stopListening();
+615:         setTimeout(startListening, 200);
+616:       }
+617:     });
+618:   }
+619: 
+620:   if (voiceSpeedSelect) {
+621:     voiceSpeedSelect.addEventListener('change', (e) => {
+622:       state.speechSpeed = parseFloat(e.target.value);
+623:     });
+624:   }
+625: 
+626:   if (autoSpeakToggle) {
+627:     autoSpeakToggle.addEventListener('change', (e) => {
+628:       state.autoReadAnswers = e.target.checked;
+629:     });
+630:   }
+631: 
+632:   // =========================================================================
+633:   // Topic Contexts & Starter Selection
+634:   // =========================================================================
+635:   topicList.addEventListener('click', (e) => {
+636:     const item = e.target.closest('.topic-item');
+637:     if (!item) return;
+638: 
+639:     document.querySelectorAll('.topic-item').forEach(el => el.classList.remove('active'));
+640:     item.classList.add('active');
+641: 
+642:     const selectedTopic = item.dataset.topic;
+643:     state.currentTopic = selectedTopic;
+644:     activeContextBadge.textContent = `${selectedTopic} Context`;
+645:     inputTopicTag.textContent = selectedTopic;
+646: 
+647:     showToast(`Context filtered to: ${selectedTopic}`);
+648:     if (window.innerWidth <= 768) closeSidebar();
+649:   });
+650: 
+651:   document.querySelectorAll('.starter-card').forEach(card => {
+652:     card.addEventListener('click', () => {
+653:       const q = card.dataset.query;
+654:       handleUserQuery(q);
+655:     });
+656:   });
+657: 
+658:   // Input Token Estimator
+659:   chatTextarea.addEventListener('input', () => {
+660:     chatTextarea.style.height = 'auto';
+661:     chatTextarea.style.height = `${Math.min(chatTextarea.scrollHeight, 160)}px`;
+662: 
+663:     const textLen = chatTextarea.value.length;
+664:     const est = Math.max(12, Math.ceil(textLen / 4) + 15);
+665:     inputTokenEst.textContent = `~${est} tokens`;
+666:   });
+667: 
+668:   chatTextarea.addEventListener('keydown', (e) => {
+669:     if (e.key === 'Enter' && !e.shiftKey) {
+670:       e.preventDefault();
+671:       chatForm.dispatchEvent(new Event('submit'));
+672:     }
+673:   });
+674: 
+675:   chatForm.addEventListener('submit', (e) => {
+676:     e.preventDefault();
+677:     const query = chatTextarea.value.trim();
+678:     if (!query) return;
+679:     chatTextarea.value = '';
+680:     chatTextarea.style.height = 'auto';
+681:     handleUserQuery(query, false);
+682:   });
+683: 
+684:   // =========================================================================
+685:   // Core Chat Execution & NLP Pipeline Integration
+686:   // =========================================================================
+687:   async function handleUserQuery(query, isVoice = false) {
+688:     if (!query) return;
+689: 
+690:     // Hide empty state hero
+691:     if (emptyState.style.display !== 'none') {
+692:       emptyState.style.display = 'none';
+693:     }
+694: 
+695:     // Append User Bubble
+696:     appendUserBubble(query);
+697: 
+698:     // Show Typing Indicator
+699:     typingIndicator.style.display = 'flex';
+700:     scrollToBottom();
+701: 
+702:     if (state.isVoiceModalOpen) {
+703:       setVoiceState('THINKING', 'Jarvix is consulting knowledge base…');
+704:     }
+705: 
+706:     try {
+707:       const response = await fetch(`${API_BASE}/api/chat`, {
+708:         method: 'POST',
+709:         headers: { 'Content-Type': 'application/json' },
+710:         body: JSON.stringify({
+711:           query: query,
+712:           topic: state.currentTopic,
+713:           is_voice: isVoice,
+714:           session_id: state.sessionId,
+715:           guest_id: state.guestId
+716:         })
+717:       });
+718: 
+719:       const data = await response.json();
+720:       typingIndicator.style.display = 'none';
+721: 
+722:       // Soft Block / Guest limit check
+723:       if (data.blocked) {
+724:         if (data.reason === 'guest_limit') {
+725:           appendBotBubble({
+726:             matched: false,
+727:             answer: data.message,
+728:             confidence: 0,
+729:             contact_support: false,
+730:             isAlert: true
+731:           });
+732:           openAuthModal(true);
+733:         } else if (data.reason === 'token_limit') {
+734:           appendBotBubble({
+735:             matched: false,
+736:             answer: data.message,
+737:             confidence: 0,
+738:             contact_support: false,
+739:             isAlert: true
+740:           });
+741:           openPricingModal();
+742:         }
+743:         return;
+744:       }
+745: 
+746:       // Update token metrics & usage
+747:       updateTokenUsageMetrics(data);
+748: 
+749:       // Append Bot Bubble with answer & confidence
+750:       appendBotBubble(data, isVoice);
+751: 
+752:       // Voice Modal integration
+753:       if (state.isVoiceModalOpen) {
+754:         voiceAnswerBox.style.display = 'block';
+755:         voiceMatchBadge.textContent = `${data.confidence}% Match`;
+756:         voiceTopicLabel.textContent = data.topic || 'General';
+757:         voiceAnswerText.textContent = data.answer;
+758:         if (state.autoReadAnswers) {
+759:           speakText(data.answer);
+760:         } else {
+761:           setVoiceState('IDLE', 'Answer received. Tap orb to speak again.');
+762:         }
+763:       }
+764: 
+765:     } catch (err) {
+766:       console.error('Chat error:', err);
+767:       typingIndicator.style.display = 'none';
+768:       appendBotBubble({
+769:         matched: false,
+770:         answer: 'Querix encountered a network connection anomaly. Please check backend server status.',
+771:         confidence: 0,
+772:         contact_support: true
+773:       });
+774:     }
+775: 
+776:     scrollToBottom();
+777:   }
+778: 
+779:   function appendUserBubble(text) {
+780:     const bubble = document.createElement('div');
+781:     bubble.className = 'chat-bubble user-bubble';
+782:     bubble.innerHTML = `
+783:       <div class="bubble-avatar">
+784:         <i data-lucide="user"></i>
+785:       </div>
+786:       <div class="bubble-content">
+787:         ${escapeHtml(text)}
+788:       </div>
+789:     `;
+790:     messageList.appendChild(bubble);
+791:     if (window.lucide) window.lucide.createIcons({ root: bubble });
+792:   }
+793: 
+794:   function appendBotBubble(data, isVoice = false) {
+795:     const bubble = document.createElement('div');
+796:     bubble.className = 'chat-bubble bot-bubble';
+797: 
+798:     let confidenceBadgeClass = 'badge-confidence';
+799:     if (data.confidence < 50) confidenceBadgeClass += ' low';
+800: 
+801:     let contentHtml = '';
+802: 
+803:     if (data.matched) {
+804:       contentHtml = `
+805:         <div class="bubble-meta-header">
+806:           <div class="bubble-tags">
+807:             <span class="badge-topic-sm">${data.topic || 'General'}</span>
+808:             <span class="${confidenceBadgeClass}">${data.confidence}% Confidence</span>
+809:           </div>
+810:           <span class="matched-question-title">${escapeHtml(data.matched_question || '')}</span>
+811:         </div>
+812:         <div class="bubble-answer-text">${formatMarkdown(data.answer)}</div>
+813:       `;
+814: 
+815:       // Related Question Chips
+816:       if (data.related_questions && data.related_questions.length > 0) {
+817:         const chipsHtml = data.related_questions.map(q => 
+818:           `<button class="query-chip" data-query="${escapeHtml(q.question)}">
+819:              <i data-lucide="help-circle"></i>
+820:              <span>${escapeHtml(q.question)}</span>
+821:            </button>`
+822:         ).join('');
+823: 
+824:         contentHtml += `
+825:           <div class="related-chips-section">
+826:             <span class="chips-label">Related Questions</span>
+827:             <div class="chips-grid">${chipsHtml}</div>
+828:           </div>
+829:         `;
+830:       }
+831: 
+832:     } else {
+833:       // Confidence < 0.35 fallback
+834:       const suggestionsHtml = (data.suggested_questions || []).map(q => 
+835:         `<button class="query-chip" data-query="${escapeHtml(q.question)}">
+836:            <i data-lucide="corner-down-right"></i>
+837:            <span>${escapeHtml(q.question)}</span>
+838:          </button>`
+839:       ).join('');
+840: 
+841:       contentHtml = `
+842:         <div class="fallback-alert-card">
+843:           <div class="fallback-title">
+844:             <i data-lucide="alert-circle"></i>
+845:             <span>${data.confidence ? `${data.confidence}% Match (Below 35% Confidence Threshold)` : 'Inquiry Notice'}</span>
+846:           </div>
+847:           <p class="bubble-answer-text">${escapeHtml(data.answer || data.message || '')}</p>
+848:         </div>
+849:       `;
+850: 
+851:       if (suggestionsHtml) {
+852:         contentHtml += `
+853:           <div class="related-chips-section">
+854:             <span class="chips-label">Did you mean:</span>
+855:             <div class="chips-grid">${suggestionsHtml}</div>
+856:           </div>
+857:         `;
+858:       }
+859: 
+860:       if (data.contact_support) {
+861:         contentHtml += `
+862:           <div style="padding-top: 6px;">
+863:             <button class="btn btn-secondary contact-support-action-btn">
+864:               <i data-lucide="headphones"></i>
+865:               <span>Contact Human Support</span>
+866:             </button>
+867:           </div>
+868:         `;
+869:       }
+870:     }
+871: 
+872:     // Action bar (Thumbs, Copy, Share, Speak)
+873:     contentHtml += `
+874:       <div class="bubble-action-bar">
+875:         <div class="feedback-group">
+876:           <button class="action-icon-btn btn-thumbs-up" title="Helpful response" data-faq="${data.faq_id || ''}">
+877:             <i data-lucide="thumbs-up"></i>
+878:             <span>Helpful</span>
+879:           </button>
+880:           <button class="action-icon-btn btn-thumbs-down" title="Not helpful" data-faq="${data.faq_id || ''}">
+881:             <i data-lucide="thumbs-down"></i>
+882:           </button>
+883:         </div>
+884:         <div style="display: flex; gap: 4px;">
+885:           <button class="action-icon-btn btn-copy-answer" title="Copy answer">
+886:             <i data-lucide="copy"></i>
+887:             <span>Copy</span>
+888:           </button>
+889:           <button class="action-icon-btn btn-share-answer" title="Share link">
+890:             <i data-lucide="share-2"></i>
+891:           </button>
+892:           <button class="action-icon-btn btn-speak-answer" title="Speak with Jarvix">
+893:             <i data-lucide="volume-2"></i>
+894:           </button>
+895:         </div>
+896:       </div>
+897:     `;
+898: 
+899:     bubble.innerHTML = `
+900:       <div class="bubble-avatar"><img src="logo.png" alt="Q" class="bot-avatar-img"></div>
+901:       <div class="bubble-content">${contentHtml}</div>
+902:     `;
+903: 
+904: 
+905:     messageList.appendChild(bubble);
+906:     if (window.lucide) window.lucide.createIcons({ root: bubble });
+907: 
+908:     // Wire action buttons
+909:     bubble.querySelectorAll('.query-chip').forEach(chip => {
+910:       chip.addEventListener('click', () => handleUserQuery(chip.dataset.query));
+911:     });
+912: 
+913:     const contactSupportBtn = bubble.querySelector('.contact-support-action-btn');
+914:     if (contactSupportBtn) {
+915:       contactSupportBtn.addEventListener('click', () => openModal(supportModal));
+916:     }
+917: 
+918:     const thumbsUp = bubble.querySelector('.btn-thumbs-up');
+919:     const thumbsDown = bubble.querySelector('.btn-thumbs-down');
+920:     if (thumbsUp && thumbsDown) {
+921:       thumbsUp.addEventListener('click', () => submitFeedback(data.faq_id, 1, thumbsUp, thumbsDown));
+922:       thumbsDown.addEventListener('click', () => submitFeedback(data.faq_id, -1, thumbsDown, thumbsUp));
+923:     }
+924: 
+925:     const copyBtn = bubble.querySelector('.btn-copy-answer');
+926:     if (copyBtn) {
+927:       copyBtn.addEventListener('click', () => {
+928:         navigator.clipboard.writeText(data.answer);
+929:         showToast('Answer copied to clipboard!');
+930:       });
+931:     }
+932: 
+933:     const shareBtn = bubble.querySelector('.btn-share-answer');
+934:     if (shareBtn) {
+935:       shareBtn.addEventListener('click', () => {
+936:         navigator.clipboard.writeText(window.location.origin + '?faq=' + (data.faq_id || 'share'));
+937:         showToast('Sharable link copied to clipboard!');
+938:       });
+939:     }
+940: 
+941:     const speakBtn = bubble.querySelector('.btn-speak-answer');
+942:     if (speakBtn) {
+943:       speakBtn.addEventListener('click', () => speakText(data.answer));
+944:     }
+945: 
+946:     // Auto read aloud if enabled and triggered by voice
+947:     if (isVoice && state.autoReadAnswers && data.answer) {
+948:       speakText(data.answer);
+949:     }
+950:   }
+951: 
+952:   async function submitFeedback(faqId, rating, activeBtn, otherBtn) {
+953:     activeBtn.classList.add(rating === 1 ? 'active-positive' : 'active-negative');
+954:     otherBtn.classList.remove('active-positive', 'active-negative');
+955:     try {
+956:       await fetch(`${API_BASE}/api/feedback`, {
+957:         method: 'POST',
+958:         headers: { 'Content-Type': 'application/json' },
+959:         body: JSON.stringify({ faq_id: faqId, query: 'Feedback', rating })
+960:       });
+961:       showToast(rating === 1 ? 'Glad this answered your question!' : 'Thanks for your feedback. We will refine this.');
+962:     } catch (e) {
+963:       console.log('Feedback error:', e);
+964:     }
+965:   }
+966: 
+967:   // =========================================================================
+968:   // 3.4 Token Meter Updates & Soft-Block
+969:   // =========================================================================
+970:   function updateTokenUsageMetrics(data) {
+971:     if (data.tokens_used !== undefined) {
+972:       state.tokensUsed = data.tokens_used;
+973:       state.tokenLimit = data.token_limit;
+974:     }
+975: 
+976:     const used = state.tokensUsed;
+977:     const limit = state.tokenLimit;
+978:     const pct = Math.min(100, Math.round((used / limit) * 100));
+979: 
+980:     tokenUsedText.textContent = used.toLocaleString();
+981:     tokenLimitText.textContent = limit.toLocaleString();
+982:     tokenProgressBar.style.width = `${pct}%`;
+983:     tokenPctText.textContent = `${pct}% used`;
+984: 
+985:     // Visual Color Shifts at 70% and 90%
+986:     tokenProgressBar.classList.remove('warning', 'danger');
+987:     if (pct >= 90) {
+988:       tokenProgressBar.classList.add('danger');
+989:     } else if (pct >= 70) {
+990:       tokenProgressBar.classList.add('warning');
+991:     }
+992: 
+993:     if (data.is_guest) {
+994:       state.guestQuestionsLeft = data.guest_questions_left;
+995:       userStatusDisplay.textContent = `${state.guestQuestionsLeft} questions left`;
+996:       planBadgeLabel.textContent = 'Guest Tier';
+997:     } else {
+998:       userStatusDisplay.textContent = `${state.plan} Plan`;
+999:       planBadgeLabel.textContent = `${state.plan} Tier`;
+1000:     }
+1001:   }
+1002: 
+1003:   // =========================================================================
+1004:   // 3.3 Authentication & Session Management
+1005:   // =========================================================================
+1006:   let isSignupMode = true;
+1007: 
+1008:   function openAuthModal(signup = true) {
+1009:     isSignupMode = signup;
+1010:     authErrorMsg.style.display = 'none';
+1011: 
+1012:     if (signup) {
+1013:       tabSignup.classList.add('active');
+1014:       tabLogin.classList.remove('active');
+1015:       groupName.style.display = 'flex';
+1016:       authName.required = true;
+1017:       authModalTitle.textContent = 'Create your Querix Account';
+1018:       authModalSub.textContent = 'Unlock 10,000 free monthly tokens and cloud history sync.';
+1019:       authSubmitBtn.querySelector('span').textContent = 'Create Free Account';
+1020:     } else {
+1021:       tabLogin.classList.add('active');
+1022:       tabSignup.classList.remove('active');
+1023:       groupName.style.display = 'none';
+1024:       authName.required = false;
+1025:       authModalTitle.textContent = 'Welcome Back to Querix';
+1026:       authModalSub.textContent = 'Sign in to access your quotas, custom FAQs, and voice settings.';
+1027:       authSubmitBtn.querySelector('span').textContent = 'Sign In to Account';
+1028:     }
+1029: 
+1030:     openModal(authModal);
+1031:   }
+1032: 
+1033:   tabSignup.addEventListener('click', () => openAuthModal(true));
+1034:   tabLogin.addEventListener('click', () => openAuthModal(false));
+1035:   closeAuthModalBtn.addEventListener('click', () => closeModal(authModal));
+1036: 
+1037:   authForm.addEventListener('submit', async (e) => {
+1038:     e.preventDefault();
+1039:     authErrorMsg.style.display = 'none';
+1040: 
+1041:     const email = authEmail.value.trim();
+1042:     const password = authPassword.value;
+1043:     const name = authName.value.trim();
+1044: 
+1045:     const endpoint = isSignupMode ? `${API_BASE}/api/auth/signup` : `${API_BASE}/api/auth/login`;
+1046:     const payload = isSignupMode ? { email, password, name } : { email, password };
+1047: 
+1048:     try {
+1049:       const res = await fetch(endpoint, {
+1050:         method: 'POST',
+1051:         headers: { 'Content-Type': 'application/json' },
+1052:         body: JSON.stringify(payload)
+1053:       });
+1054:       const data = await res.json();
+1055: 
+1056:       if (!res.ok) {
+1057:         authErrorMsg.textContent = data.detail || 'Authentication failed. Please verify credentials.';
+1058:         authErrorMsg.style.display = 'block';
+1059:         return;
+1060:       }
+1061: 
+1062:       // Success
+1063:       state.user = data.user;
+1064:       state.plan = data.user.plan;
+1065:       state.tokensUsed = data.user.tokens_used;
+1066:       state.tokenLimit = data.user.token_limit;
+1067: 
+1068:       userNameDisplay.textContent = data.user.name;
+1069:       userStatusDisplay.textContent = `${data.user.plan} Plan`;
+1070:       profileNameText.textContent = data.user.name;
+1071:       profileEmailText.textContent = data.user.email;
+1072:       planBadgeLabel.textContent = `${data.user.plan} Tier`;
+1073: 
+1074:       updateTokenUsageMetrics({
+1075:         tokens_used: data.user.tokens_used,
+1076:         token_limit: data.user.token_limit,
+1077:         is_guest: false
+1078:       });
+1079: 
+1080:       closeModal(authModal);
+1081:       showToast(`Welcome ${data.user.name}! Your account is active.`);
+1082: 
+1083:     } catch (err) {
+1084:       authErrorMsg.textContent = 'Unable to reach authentication server.';
+1085:       authErrorMsg.style.display = 'block';
+1086:     }
+1087:   });
+1088: 
+1089:   googleAuthBtn.addEventListener('click', () => {
+1090:     // Simulated Google OAuth login
+1091:     authName.value = 'Dr. Priya Sharma';
+1092:     authEmail.value = 'priya.sharma@example.com';
+1093:     authPassword.value = 'SecureP@ssword2026';
+1094:     authForm.dispatchEvent(new Event('submit'));
+1095:   });
+1096: 
+1097:   signoutBtn.addEventListener('click', async () => {
+1098:     await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST' });
+1099:     state.user = null;
+1100:     state.plan = 'Free';
+1101:     userNameDisplay.textContent = 'Guest User';
+1102:     userStatusDisplay.textContent = '5 questions left';
+1103:     planBadgeLabel.textContent = 'Guest Tier';
+1104:     closeModal(profileModal);
+1105:     showToast('Signed out of session.');
+1106:   });
+1107: 
+1108:   deleteAccountBtn.addEventListener('click', async () => {
+1109:     if (confirm('Are you sure you want to permanently delete your account and all data under GDPR Right to Erasure? This action is irreversible.')) {
+1110:       await fetch(`${API_BASE}/api/account`, { method: 'DELETE' });
+1111:       state.user = null;
+1112:       closeModal(profileModal);
+1113:       showToast('Account permanently erased.');
+1114:       location.reload();
+1115:     }
+1116:   });
+1117: 
+1118:   // Check existing session
+1119:   async function checkAuthSession() {
+1120:     try {
+1121:       const res = await fetch(`${API_BASE}/api/auth/me`);
+1122:       const data = await res.json();
+1123:       if (data.authenticated && data.user) {
+1124:         state.user = data.user;
+1125:         state.plan = data.user.plan;
+1126:         state.tokensUsed = data.user.tokens_used;
+1127:         state.tokenLimit = data.user.token_limit;
+1128:         userNameDisplay.textContent = data.user.name;
+1129:         userStatusDisplay.textContent = `${data.user.plan} Plan`;
+1130:         profileNameText.textContent = data.user.name;
+1131:         profileEmailText.textContent = data.user.email;
+1132:         updateTokenUsageMetrics({
+1133:           tokens_used: data.user.tokens_used,
+1134:           token_limit: data.user.token_limit,
+1135:           is_guest: false
+1136:         });
+1137:       }
+1138:     } catch (e) {
+1139:       console.log('Session check:', e);
+1140:     }
+1141:   }
+1142:   checkAuthSession();
+1143: 
+1144:   // =========================================================================
+1145:   // 3.4 Token Ledger Modal
+1146:   // =========================================================================
+1147:   async function openLedgerModal() {
+1148:     openModal(ledgerModal);
+1149:     ledgerPlanVal.textContent = `${state.plan} Tier`;
+1150:     ledgerUsedVal.textContent = state.tokensUsed.toLocaleString();
+1151:     ledgerLimitVal.textContent = state.tokenLimit.toLocaleString();
+1152:     const pct = Math.round((state.tokensUsed / state.tokenLimit) * 100);
+1153:     ledgerPctVal.textContent = `${pct}%`;
+1154: 
+1155:     try {
+1156:       const res = await fetch(`${API_BASE}/api/usage`);
+1157:       const data = await res.json();
+1158:       if (data.ledger && data.ledger.length > 0) {
+1159:         ledgerTableBody.innerHTML = data.ledger.map(row => `
+1160:           <tr>
+1161:             <td style="color: var(--text-dim); font-size: 11.5px;">${new Date(row.date).toLocaleTimeString()}</td>
+1162:             <td>${escapeHtml(row.query)}</td>
+1163:             <td><span class="badge" style="font-size: 10px; background: rgba(0,212,255,0.1); color: var(--brand-cyan);">${row.query_type}</span></td>
+1164:             <td style="font-family: var(--font-mono); font-weight: 600;">+${row.tokens_used}</td>
+1165:           </tr>
+1166:         `).join('');
+1167:       } else {
+1168:         ledgerTableBody.innerHTML = `<tr><td colspan="4" class="empty-table">No query transactions logged yet.</td></tr>`;
+1169:       }
+1170:     } catch (e) {
+1171:       console.log('Ledger fetch error:', e);
+1172:     }
+1173:   }
+1174: 
+1175:   viewLedgerBtn.addEventListener('click', openLedgerModal);
+1176:   closeLedgerModalBtn.addEventListener('click', () => closeModal(ledgerModal));
+1177: 
+1178:   ledgerTopupBtn.addEventListener('click', () => {
+1179:     closeModal(ledgerModal);
+1180:     purchaseTopup();
+1181:   });
+1182: 
+1183:   ledgerUpgradeBtn.addEventListener('click', () => {
+1184:     closeModal(ledgerModal);
+1185:     openPricingModal();
+1186:   });
+1187: 
+1188:   // =========================================================================
+1189:   // 3.5 Plans & Upgrade Integration
+1190:   // =========================================================================
+1191:   function openPricingModal() {
+1192:     openModal(pricingModal);
+1193:     if (window.lucide) window.lucide.createIcons();
+1194:   }
+1195: 
+1196:   const goProCard = document.getElementById('go-pro-card');
+1197:   if (goProCard) {
+1198:     goProCard.addEventListener('click', openPricingModal);
+1199:   }
+1200:   if (sidebarUpgradeBtn) {
+1201:     sidebarUpgradeBtn.addEventListener('click', (e) => {
+1202:       e.stopPropagation();
+1203:       openPricingModal();
+1204:     });
+1205:   }
+1206:   closePricingModalBtn.addEventListener('click', () => closeModal(pricingModal));
+1207: 
+1208:   billingCycleSwitch.addEventListener('click', () => {
+1209:     billingCycleSwitch.classList.toggle('active');
+1210:     const isYearly = billingCycleSwitch.classList.contains('active');
+1211:     state.billingCycle = isYearly ? 'yearly' : 'monthly';
+1212: 
+1213:     if (isYearly) {
+1214:       proPriceVal.textContent = '4,990';
+1215:       proPeriodVal.textContent = '/year (₹415/mo)';
+1216:       bizPriceVal.textContent = '19,990';
+1217:       bizPeriodVal.textContent = '/year (₹1,665/mo)';
+1218:     } else {
+1219:       proPriceVal.textContent = '499';
+1220:       proPeriodVal.textContent = '/month';
+1221:       bizPriceVal.textContent = '1,999';
+1222:       bizPeriodVal.textContent = '/month';
+1223:     }
+1224:   });
+1225: 
+1226:   // =========================================================================
+1227:   // 3.5.1 Querix Secure Checkout & Payment Engine
+1228:   // =========================================================================
+1229:   let currentCheckoutPlan = 'Pro';
+1230:   let currentCheckoutCycle = 'monthly';
+1231:   let currentPaymentMethod = 'UPI';
+1232:   let activePromoDiscount = 0;
+1233: 
+1234:   function openCheckoutModal(planName = 'Pro', cycle = null) {
+1235:     currentCheckoutPlan = planName;
+1236:     currentCheckoutCycle = cycle || state.billingCycle || 'monthly';
+1237:     activePromoDiscount = 0;
+1238: 
+1239:     checkoutViewForm.style.display = 'block';
+1240:     checkoutViewReceipt.style.display = 'none';
+1241:     promoStatusMsg.style.display = 'none';
+1242:     summaryDiscountRow.style.display = 'none';
+1243:     checkoutPromoInput.value = '';
+1244: 
+1245:     if (state.user) {
+1246:       checkoutCustomerName.value = state.user.name || 'Alex Morgan';
+1247:       checkoutCustomerEmail.value = state.user.email || 'alex@company.com';
+1248:     }
+1249: 
+1250:     updateCheckoutPricingDisplay();
+1251:     closeModal(pricingModal);
+1252:     openModal(checkoutModal);
+1253:     if (window.lucide) window.lucide.createIcons();
+1254:   }
+1255: 
+1256:   function updateCheckoutPricingDisplay() {
+1257:     let basePrice = 499;
+1258:     let tokensDesc = '500,000 Tokens/mo';
+1259:     let cycleDesc = currentCheckoutCycle === 'yearly' ? 'Yearly Subscription (2 Months Free)' : 'Monthly Subscription';
+1260: 
+1261:     if (currentCheckoutPlan === 'Business') {
+1262:       basePrice = currentCheckoutCycle === 'yearly' ? 19990 : 1999;
+1263:       tokensDesc = '3,000,000 Tokens/mo';
+1264:     } else if (currentCheckoutPlan === 'Topup') {
+1265:       basePrice = 99;
+1266:       tokensDesc = '+100,000 Token Booster Pack';
+1267:       cycleDesc = 'Instant Top-Up Pack (One-Time)';
+1268:     } else {
+1269:       // Pro
+1270:       basePrice = currentCheckoutCycle === 'yearly' ? 4990 : 499;
+1271:       tokensDesc = '500,000 Tokens/mo';
+1272:     }
+1273: 
+1274:     summaryPlanName.textContent = currentCheckoutPlan === 'Topup' ? 'Token Booster Pack' : `${currentCheckoutPlan} Plan`;
+1275:     summaryPlanCycle.textContent = cycleDesc;
+1276:     summaryPlanTokens.textContent = tokensDesc;
+1277: 
+1278:     const discount = activePromoDiscount;
+1279:     const finalAmount = Math.max(0, basePrice - discount);
+1280:     const tax = Math.round(finalAmount * 0.18 * 100) / 100;
+1281: 
+1282:     summarySubtotal.textContent = `₹${basePrice.toFixed(2)}`;
+1283:     if (discount > 0) {
+1284:       summaryDiscountRow.style.display = 'flex';
+1285:       summaryDiscountVal.textContent = `-₹${discount.toFixed(2)}`;
+1286:     } else {
+1287:       summaryDiscountRow.style.display = 'none';
+1288:     }
+1289: 
+1290:     summaryTax.textContent = `₹${tax.toFixed(2)}`;
+1291:     summaryTotalAmount.textContent = `₹${finalAmount.toFixed(2)}`;
+1292:     btnPayLabel.textContent = `Pay ₹${finalAmount.toFixed(2)} & Activate ${currentCheckoutPlan === 'Topup' ? 'Tokens' : currentCheckoutPlan}`;
+1293:   }
+1294: 
+1295:   // Payment Tabs Switcher
+1296:   document.querySelectorAll('.pay-tab-btn').forEach(btn => {
+1297:     btn.addEventListener('click', () => {
+1298:       document.querySelectorAll('.pay-tab-btn').forEach(b => b.classList.remove('active'));
+1299:       document.querySelectorAll('.pay-tab-content').forEach(c => c.style.display = 'none');
+1300: 
+1301:       btn.classList.add('active');
+1302:       const tab = btn.dataset.tab;
+1303:       currentPaymentMethod = tab.toUpperCase();
+1304:       const content = document.getElementById(`tab-content-${tab}`);
+1305:       if (content) content.style.display = 'block';
+1306:     });
+1307:   });
+1308: 
+1309:   // Bank selection styling
+1310:   document.querySelectorAll('input[name="bank_select"]').forEach(input => {
+1311:     input.addEventListener('change', (e) => {
+1312:       document.querySelectorAll('.bank-card').forEach(c => c.classList.remove('active'));
+1313:       e.target.closest('.bank-card').classList.add('active');
+1314:     });
+1315:   });
+1316: 
+1317:   // Wallet selection styling
+1318:   document.querySelectorAll('input[name="wallet_select"]').forEach(input => {
+1319:     input.addEventListener('change', (e) => {
+1320:       document.querySelectorAll('.wallet-card').forEach(c => c.classList.remove('active'));
+1321:       e.target.closest('.wallet-card').classList.add('active');
+1322:     });
+1323:   });
+1324: 
+1325:   // Demo auto-fill test card
+1326:   if (btnFillDemoCard) {
+1327:     btnFillDemoCard.addEventListener('click', () => {
+1328:       document.getElementById('card-name').value = state.user?.name || 'Alex Morgan';
+1329:       document.getElementById('card-number').value = '4532 8901 2345 6789';
+1330:       document.getElementById('card-expiry').value = '12/28';
+1331:       document.getElementById('card-cvv').value = '888';
+1332:       showToast('Demo Card auto-filled with test credentials!');
+1333:     });
+1334:   }
+1335: 
+1336:   // Demo VPA chips
+1337:   document.querySelectorAll('.vpa-chip').forEach(chip => {
+1338:     chip.addEventListener('click', () => {
+1339:       checkoutUpiId.value = chip.dataset.vpa;
+1340:       showToast(`Selected UPI ID: ${chip.dataset.vpa}`);
+1341:     });
+1342:   });
+1343: 
+1344:   if (btnVerifyUpi) {
+1345:     btnVerifyUpi.addEventListener('click', () => {
+1346:       showToast(`VPA ${checkoutUpiId.value} verified with NPCI!`);
+1347:     });
+1348:   }
+1349: 
+1350:   // Promo Code Application
+1351:   if (btnApplyPromo) {
+1352:     btnApplyPromo.addEventListener('click', () => {
+1353:       const code = checkoutPromoInput.value.trim().toUpperCase();
+1354:       if (code === 'QUERIX50') {
+1355:         activePromoDiscount = currentCheckoutPlan === 'Business' ? 500 : 100;
+1356:         promoStatusMsg.style.display = 'block';
+1357:         promoStatusMsg.style.background = 'rgba(46, 204, 113, 0.15)';
+1358:         promoStatusMsg.style.color = 'var(--status-success)';
+1359:         promoStatusMsg.textContent = `🎉 Coupon QUERIX50 applied! ₹${activePromoDiscount} discount credited.`;
+1360:         updateCheckoutPricingDisplay();
+1361:       } else if (code === 'WELCOME') {
+1362:         activePromoDiscount = 50;
+1363:         promoStatusMsg.style.display = 'block';
+1364:         promoStatusMsg.style.background = 'rgba(46, 204, 113, 0.15)';
+1365:         promoStatusMsg.style.color = 'var(--status-success)';
+1366:         promoStatusMsg.textContent = '🎉 Coupon WELCOME applied! ₹50 discount credited.';
+1367:         updateCheckoutPricingDisplay();
+1368:       } else {
+1369:         promoStatusMsg.style.display = 'block';
+1370:         promoStatusMsg.style.background = 'rgba(255, 92, 92, 0.12)';
+1371:         promoStatusMsg.style.color = 'var(--status-error)';
+1372:         promoStatusMsg.textContent = 'Invalid promo code. Try "QUERIX50" or "WELCOME".';
+1373:       }
+1374:     });
+1375:   }
+1376: 
+1377:   // Complete Payment Action
+1378:   if (btnCompletePayment) {
+1379:     btnCompletePayment.addEventListener('click', async () => {
+1380:       const email = checkoutCustomerEmail.value.trim();
+1381:       const name = checkoutCustomerName.value.trim() || 'Alex Morgan';
+1382: 
+1383:       if (!email || !email.includes('@')) {
+1384:         alert('Please enter a valid billing email address.');
+1385:         checkoutCustomerEmail.focus();
+1386:         return;
+1387:       }
+1388: 
+1389:       // Step 1: Connecting Gateway
+1390:       btnCompletePayment.disabled = true;
+1391:       btnPayLabel.textContent = `Contacting ${currentPaymentMethod} Banking Gateway…`;
+1392: 
+1393:       setTimeout(() => {
+1394:         // Step 2: Authorizing
+1395:         btnPayLabel.textContent = `Authorizing Payment & 3D Secure Verification…`;
+1396: 
+1397:         setTimeout(async () => {
+1398:           try {
+1399:             const endpoint = currentCheckoutPlan === 'Topup'
+1400:               ? `${API_BASE}/api/billing/topup`
+1401:               : `${API_BASE}/api/billing/upgrade`;
+1402: 
+1403:             const payload = currentCheckoutPlan === 'Topup'
+1404:               ? {
+1405:                   payment_method: currentPaymentMethod,
+1406:                   customer_email: email,
+1407:                   customer_name: name,
+1408:                   amount: 99.0
+1409:                 }
+1410:               : {
+1411:                   plan: currentCheckoutPlan,
+1412:                   billing_period: currentCheckoutCycle,
+1413:                   payment_method: currentPaymentMethod,
+1414:                   customer_email: email,
+1415:                   customer_name: name
+1416:                 };
+1417: 
+1418:             const res = await fetch(endpoint, {
+1419:               method: 'POST',
+1420:               headers: { 'Content-Type': 'application/json' },
+1421:               body: JSON.stringify(payload)
+1422:             });
+1423:             const data = await res.json();
+1424: 
+1425:             if (res.ok && data.success) {
+1426:               btnPayLabel.textContent = `Payment Approved!`;
+1427: 
+1428:               state.user = data.user;
+1429:               state.plan = data.user.plan;
+1430:               state.tokenLimit = data.user.token_limit;
+1431:               state.tokensUsed = data.user.tokens_used;
+1432: 
+1433:               userNameDisplay.textContent = data.user.name;
+1434:               userStatusDisplay.textContent = `${data.user.plan} Plan`;
+1435:               profileNameText.textContent = data.user.name;
+1436:               profileEmailText.textContent = data.user.email;
+1437:               planBadgeLabel.textContent = `${data.user.plan} Tier`;
+1438: 
+1439:               updateTokenUsageMetrics({
+1440:                 tokens_used: data.user.tokens_used,
+1441:                 token_limit: data.user.token_limit,
+1442:                 is_guest: false
+1443:               });
+1444: 
+1445:               // Transition to Receipt View
+1446:               checkoutViewForm.style.display = 'none';
+1447:               checkoutViewReceipt.style.display = 'block';
+1448: 
+1449:               document.getElementById('receipt-txn-id').textContent = data.transaction_id || `TXN_QX_${Date.now()}`;
+1450:               document.getElementById('receipt-invoice-no').textContent = data.invoice_no || `INV-2026-001`;
+1451:               document.getElementById('receipt-plan-name').textContent = `${data.user.plan} Tier`;
+1452:               document.getElementById('receipt-amount').textContent = `₹${(data.amount_paid || 499).toFixed(2)} INR`;
+1453:               document.getElementById('receipt-method').textContent = `${currentPaymentMethod} (${currentPaymentMethod === 'UPI' ? checkoutUpiId.value : 'Authorized'})`;
+1454:               document.getElementById('receipt-time').textContent = new Date().toLocaleString();
+1455:               document.getElementById('receipt-tokens').textContent = `+${data.user.token_limit.toLocaleString()} Tokens Ready to Use`;
+1456: 
+1457:               showToast(`Payment of ₹${data.amount_paid || 499} verified! ${data.user.plan} activated.`);
+1458:             } else {
+1459:               alert(data.detail || 'Payment authorization failed.');
+1460:               btnCompletePayment.disabled = false;
+1461:               updateCheckoutPricingDisplay();
+1462:             }
+1463:           } catch (err) {
+1464:             alert('Unable to reach payment gateway.');
+1465:             btnCompletePayment.disabled = false;
+1466:             updateCheckoutPricingDisplay();
+1467:           }
+1468:         }, 750);
+1469:       }, 750);
+1470:     });
+1471:   }
+1472: 
+1473:   // Download Receipt
+1474:   if (btnDownloadReceipt) {
+1475:     btnDownloadReceipt.addEventListener('click', () => {
+1476:       const receiptData = {
+1477:         platform: "Querix — AI FAQ Intelligence",
+1478:         transaction_id: document.getElementById('receipt-txn-id').textContent,
+1479:         invoice_number: document.getElementById('receipt-invoice-no').textContent,
+1480:         plan_name: document.getElementById('receipt-plan-name').textContent,
+1481:         amount_paid: document.getElementById('receipt-amount').textContent,
+1482:         payment_method: document.getElementById('receipt-method').textContent,
+1483:         timestamp: document.getElementById('receipt-time').textContent,
+1484:         customer_email: checkoutCustomerEmail.value,
+1485:         token_quota: document.getElementById('receipt-tokens').textContent,
+1486:         status: "COMPLETED / PAID"
+1487:       };
+1488: 
+1489:       const blob = new Blob([JSON.stringify(receiptData, null, 2)], { type: 'application/json' });
+1490:       const url = URL.createObjectURL(blob);
+1491:       const a = document.createElement('a');
+1492:       a.href = url;
+1493:       a.download = `Querix_Tax_Invoice_${receiptData.invoice_number}.json`;
+1494:       a.click();
+1495:       URL.revokeObjectURL(url);
+1496:       showToast('Tax Invoice receipt downloaded.');
+1497:     });
+1498:   }
+1499: 
+1500:   if (btnFinishCheckout) {
+1501:     btnFinishCheckout.addEventListener('click', () => {
+1502:       closeModal(checkoutModal);
+1503:       btnCompletePayment.disabled = false;
+1504:       chatTextarea.focus();
+1505:     });
+1506:   }
+1507: 
+1508:   if (closeCheckoutModalBtn) {
+1509:     closeCheckoutModalBtn.addEventListener('click', () => {
+1510:       closeModal(checkoutModal);
+1511:       btnCompletePayment.disabled = false;
+1512:     });
+1513:   }
+1514: 
+1515:   // Pricing Modal Buttons launch Checkout
+1516:   upgradeProBtn.addEventListener('click', () => openCheckoutModal('Pro'));
+1517:   upgradeBizBtn.addEventListener('click', () => openCheckoutModal('Business'));
+1518:   quickTopupBtn.addEventListener('click', () => openCheckoutModal('Topup'));
+1519: 
+1520:   // =========================================================================
+1521:   // 3.6 Admin Analytics & Custom FAQ Ingestion
+1522:   // =========================================================================
+1523:   async function openAdminModal() {
+1524:     openModal(adminModal);
+1525:     loadAnalytics();
+1526:   }
+1527: 
+1528:   headerAdminBtn.addEventListener('click', openAdminModal);
+1529:   closeAdminModalBtn.addEventListener('click', () => closeModal(adminModal));
+1530: 
+1531:   tabAnalytics.addEventListener('click', () => {
+1532:     tabAnalytics.classList.add('active');
+1533:     tabUpload.classList.remove('active');
+1534:     viewAnalytics.style.display = 'block';
+1535:     viewUpload.style.display = 'none';
+1536:   });
+1537: 
+1538:   tabUpload.addEventListener('click', () => {
+1539:     tabUpload.classList.add('active');
+1540:     tabAnalytics.classList.remove('active');
+1541:     viewUpload.style.display = 'block';
+1542:     viewAnalytics.style.display = 'none';
+1543:   });
+1544: 
+1545:   async function loadAnalytics() {
+1546:     try {
+1547:       const res = await fetch(`${API_BASE}/api/admin/analytics`);
+1548:       const data = await res.json();
+1549: 
+1550:       document.getElementById('kpi-queries').textContent = data.total_queries;
+1551:       document.getElementById('kpi-confidence').textContent = `${data.average_confidence}%`;
+1552:       document.getElementById('kpi-satisfaction').textContent = `${data.satisfaction_rate}%`;
+1553: 
+1554:       const topList = document.getElementById('top-questions-list');
+1555:       if (data.top_questions && data.top_questions.length > 0) {
+1556:         topList.innerHTML = data.top_questions.map(q => 
+1557:           `<li><span>${escapeHtml(q.query)}</span> <span class="badge" style="background: rgba(108,92,231,0.2); color: var(--brand-cyan);">${q.count} queries</span></li>`
+1558:         ).join('');
+1559:       }
+1560: 
+1561:       const unList = document.getElementById('unanswered-list');
+1562:       if (data.unmatched_queries && data.unmatched_queries.length > 0) {
+1563:         unList.innerHTML = data.unmatched_queries.map(q => 
+1564:           `<li><span>${escapeHtml(q.query)}</span> <span class="badge badge-warn">${q.count} hits</span></li>`
+1565:         ).join('');
+1566:       }
+1567: 
+1568:     } catch (e) {
+1569:       console.log('Analytics load error:', e);
+1570:     }
+1571:   }
+1572: 
+1573:   // Custom FAQ Upload
+1574:   browseFaqFileBtn.addEventListener('click', () => faqFileInput.click());
+1575: 
+1576:   faqFileInput.addEventListener('change', async (e) => {
+1577:     const file = e.target.files[0];
+1578:     if (!file) return;
+1579: 
+1580:     const formData = new FormData();
+1581:     formData.append('file', file);
+1582: 
+1583:     uploadStatusAlert.style.display = 'block';
+1584:     uploadStatusAlert.style.background = 'rgba(108, 92, 231, 0.15)';
+1585:     uploadStatusAlert.style.color = 'var(--brand-cyan)';
+1586:     uploadStatusAlert.textContent = 'Uploading and retraining TF-IDF index…';
+1587: 
+1588:     try {
+1589:       const res = await fetch(`${API_BASE}/api/faq/upload`, {
+1590:         method: 'POST',
+1591:         body: formData
+1592:       });
+1593:       const data = await res.json();
+1594: 
+1595:       if (res.ok) {
+1596:         uploadStatusAlert.style.background = 'rgba(46, 204, 113, 0.15)';
+1597:         uploadStatusAlert.style.color = 'var(--status-success)';
+1598:         uploadStatusAlert.textContent = data.message;
+1599:         showToast(data.message);
+1600:       } else {
+1601:         uploadStatusAlert.style.background = 'rgba(255, 92, 92, 0.15)';
+1602:         uploadStatusAlert.style.color = 'var(--status-error)';
+1603:         uploadStatusAlert.textContent = data.detail || 'Upload failed.';
+1604:       }
+1605:     } catch (err) {
+1606:       uploadStatusAlert.textContent = 'Upload network error.';
+1607:     }
+1608:   });
+1609: 
+1610:   // Drag and Drop
+1611:   faqDropzone.addEventListener('dragover', (e) => {
+1612:     e.preventDefault();
+1613:     faqDropzone.style.borderColor = 'var(--brand-cyan)';
+1614:   });
+1615:   faqDropzone.addEventListener('dragleave', () => {
+1616:     faqDropzone.style.borderColor = 'var(--border-focus)';
+1617:   });
+1618:   faqDropzone.addEventListener('drop', (e) => {
+1619:     e.preventDefault();
+1620:     faqDropzone.style.borderColor = 'var(--border-focus)';
+1621:     if (e.dataTransfer.files.length) {
+1622:       faqFileInput.files = e.dataTransfer.files;
+1623:       faqFileInput.dispatchEvent(new Event('change'));
+1624:     }
+1625:   });
+1626: 
+1627:   // =========================================================================
+1628:   // Profile Modal & History Export
+1629:   // =========================================================================
+1630:   // User Dropdown Menu Elements
+1631:   const userDropdownMenu = document.getElementById('user-dropdown-menu');
+1632:   const userMenuChevron = document.getElementById('user-menu-chevron');
+1633:   const dropdownUserName = document.getElementById('dropdown-user-name');
+1634:   const dropdownUserBadge = document.getElementById('dropdown-user-badge');
+1635:   const dropdownOptProfile = document.getElementById('dropdown-opt-profile');
+1636:   const dropdownOptUpgrade = document.getElementById('dropdown-opt-upgrade');
+1637:   const dropdownOptLedger = document.getElementById('dropdown-opt-ledger');
+1638:   const dropdownOptTheme = document.getElementById('dropdown-opt-theme');
+1639:   const dropdownThemeLabel = document.getElementById('dropdown-theme-label');
+1640:   const dropdownOptAuth = document.getElementById('dropdown-opt-auth');
+1641:   const dropdownAuthLabel = document.getElementById('dropdown-auth-label');
+1642:   const dropdownAuthIcon = document.getElementById('dropdown-auth-icon');
+1643: 
+1644:   function updateUserDropdownDisplay() {
+1645:     if (!userDropdownMenu) return;
+1646:     if (state.user) {
+1647:       if (dropdownUserName) dropdownUserName.textContent = state.user.name || 'User';
+1648:       if (dropdownUserBadge) dropdownUserBadge.textContent = `${state.user.plan || 'Free'} Tier`;
+1649:       if (dropdownAuthLabel) dropdownAuthLabel.textContent = 'Sign Out';
+1650:       if (dropdownAuthIcon) dropdownAuthIcon.setAttribute('data-lucide', 'log-out');
+1651:     } else {
+1652:       if (dropdownUserName) dropdownUserName.textContent = 'Guest User';
+1653:       if (dropdownUserBadge) dropdownUserBadge.textContent = `${state.guestQuestionsLeft} Qs left`;
+1654:       if (dropdownAuthLabel) dropdownAuthLabel.textContent = 'Sign In / Sign Up';
+1655:       if (dropdownAuthIcon) dropdownAuthIcon.setAttribute('data-lucide', 'log-in');
+1656:     }
+1657:     if (dropdownThemeLabel) {
+1658:       dropdownThemeLabel.textContent = state.theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+1659:     }
+1660:     if (window.lucide) window.lucide.createIcons();
+1661:   }
+1662: 
+1663:   function toggleUserDropdown(e) {
+1664:     if (e) e.stopPropagation();
+1665:     if (!userDropdownMenu) return;
+1666:     const isActive = userDropdownMenu.classList.toggle('active');
+1667:     if (userMenuChevron) {
+1668:       userMenuChevron.style.transform = isActive ? 'rotate(180deg)' : 'rotate(0deg)';
+1669:     }
+1670:     if (isActive) updateUserDropdownDisplay();
+1671:   }
+1672: 
+1673:   function closeUserDropdown() {
+1674:     if (userDropdownMenu && userDropdownMenu.classList.contains('active')) {
+1675:       userDropdownMenu.classList.remove('active');
+1676:       if (userMenuChevron) userMenuChevron.style.transform = 'rotate(0deg)';
+1677:     }
+1678:   }
+1679: 
+1680:   userMenuBtn.addEventListener('click', toggleUserDropdown);
+1681: 
+1682:   // Close user dropdown when clicking outside
+1683:   document.addEventListener('click', (e) => {
+1684:     if (!e.target.closest('#user-menu-container')) {
+1685:       closeUserDropdown();
+1686:     }
+1687:   });
+1688: 
+1689:   if (dropdownOptProfile) {
+1690:     dropdownOptProfile.addEventListener('click', () => {
+1691:       closeUserDropdown();
+1692:       if (!state.user) openAuthModal(false);
+1693:       else openModal(profileModal);
+1694:     });
+1695:   }
+1696: 
+1697:   if (dropdownOptUpgrade) {
+1698:     dropdownOptUpgrade.addEventListener('click', () => {
+1699:       closeUserDropdown();
+1700:       openModal(pricingModal);
+1701:       if (window.lucide) window.lucide.createIcons();
+1702:     });
+1703:   }
+1704: 
+1705:   if (dropdownOptLedger) {
+1706:     dropdownOptLedger.addEventListener('click', () => {
+1707:       closeUserDropdown();
+1708:       openLedgerModal();
+1709:     });
+1710:   }
+1711: 
+1712:   if (dropdownOptTheme) {
+1713:     dropdownOptTheme.addEventListener('click', () => {
+1714:       toggleTheme();
+1715:       updateUserDropdownDisplay();
+1716:     });
+1717:   }
+1718: 
+1719:   if (dropdownOptAuth) {
+1720:     dropdownOptAuth.addEventListener('click', () => {
+1721:       closeUserDropdown();
+1722:       if (state.user) {
+1723:         signoutBtn.click();
+1724:       } else {
+1725:         openAuthModal(false);
+1726:       }
+1727:     });
+1728:   }
+1729: 
+1730:   closeProfileModalBtn.addEventListener('click', () => closeModal(profileModal));
+1731: 
+1732:   exportHistoryBtn.addEventListener('click', async () => {
+1733:     try {
+1734:       const res = await fetch('/api/history');
+1735:       const data = await res.json();
+1736:       const blob = new Blob([JSON.stringify(data.history, null, 2)], { type: 'application/json' });
+1737:       const url = URL.createObjectURL(blob);
+1738:       const a = document.createElement('a');
+1739:       a.href = url;
+1740:       a.download = `querix_chat_history_${Date.now()}.json`;
+1741:       a.click();
+1742:       URL.revokeObjectURL(url);
+1743:       showToast('Chat history exported to JSON!');
+1744:     } catch (e) {
+1745:       showToast('Export history error');
+1746:     }
+1747:   });
+1748: 
+1749:   // =========================================================================
+1750:   // Command Palette (Ctrl+K)
+1751:   // =========================================================================
+1752:   headerCmdBtn.addEventListener('click', () => openModal(cmdPaletteModal));
+1753: 
+1754:   cmdResultsList.addEventListener('click', (e) => {
+1755:     const item = e.target.closest('.cmd-item');
+1756:     if (!item) return;
+1757:     const action = item.dataset.action;
+1758:     closeModal(cmdPaletteModal);
+1759: 
+1760:     if (action === 'new-chat') resetNewChat();
+1761:     else if (action === 'voice') openVoiceModal();
+1762:     else if (action === 'ledger') openLedgerModal();
+1763:     else if (action === 'upgrade') openPricingModal();
+1764:     else if (action === 'admin') openAdminModal();
+1765:     else if (action === 'theme') toggleTheme();
+1766:     else if (action === 'export') exportHistoryBtn.click();
+1767:   });
+1768: 
+1769:   cmdInput.addEventListener('input', (e) => {
+1770:     const val = e.target.value.toLowerCase();
+1771:     document.querySelectorAll('.cmd-item').forEach(item => {
+1772:       const txt = item.textContent.toLowerCase();
+1773:       item.style.display = txt.includes(val) ? 'flex' : 'none';
+1774:     });
+1775:   });
+1776: 
+1777:   // =========================================================================
+1778:   // Theme Toggle (Dark / Light)
+1779:   // =========================================================================
+1780:   function toggleTheme() {
+1781:     state.theme = state.theme === 'dark' ? 'light' : 'dark';
+1782:     document.documentElement.setAttribute('data-theme', state.theme);
+1783:     localStorage.setItem('querix_theme', state.theme);
+1784:     updateThemeIcon();
+1785:     showToast(`Switched to ${state.theme} mode`);
+1786:   }
+1787: 
+1788:   function updateThemeIcon() {
+1789:     const iconEl = document.getElementById('theme-icon');
+1790:     if (iconEl) {
+1791:       iconEl.setAttribute('data-lucide', state.theme === 'dark' ? 'moon' : 'sun');
+1792:       if (window.lucide) window.lucide.createIcons();
+1793:     }
+1794:   }
+1795: 
+1796:   themeToggleBtn.addEventListener('click', toggleTheme);
+1797: 
+1798:   // =========================================================================
+1799:   // Keyboard Shortcuts (/, Ctrl+K, Ctrl+M, Ctrl+J, Escape)
+1800:   // =========================================================================
+1801:   document.addEventListener('keydown', (e) => {
+1802:     // Escape closes modals & user dropdown
+1803:     if (e.key === 'Escape') {
+1804:       closeUserDropdown();
+1805:       document.querySelectorAll('.modal.active, .voice-modal.active').forEach(m => {
+1806:         m.classList.remove('active');
+1807:       });
+1808:       stopListening();
+1809:       interruptSpeech();
+1810:       return;
+1811:     }
+1812: 
+1813:     // '/' Focuses chat input when not in another input
+1814:     if (e.key === '/' && document.activeElement !== chatTextarea && document.activeElement.tagName !== 'INPUT') {
+1815:       e.preventDefault();
+1816:       chatTextarea.focus();
+1817:       return;
+1818:     }
+1819: 
+1820:     // Ctrl+K or Cmd+K
+1821:     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+1822:       e.preventDefault();
+1823:       openModal(cmdPaletteModal);
+1824:       cmdInput.focus();
+1825:       return;
+1826:     }
+1827: 
+1828:     // Ctrl+M or Cmd+M: Toggle Voice
+1829:     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
+1830:       e.preventDefault();
+1831:       openVoiceModal();
+1832:       return;
+1833:     }
+1834: 
+1835:     // Ctrl+J: New Chat
+1836:     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+1837:       e.preventDefault();
+1838:       resetNewChat();
+1839:       return;
+1840:     }
+1841:   });
+1842: 
+1843:   // =========================================================================
+1844:   // Sidebar Responsiveness & Helpers
+1845:   // =========================================================================
+1846:   function openSidebar() {
+1847:     sidebar.classList.add('mobile-open');
+1848:     sidebarOverlay.classList.add('active');
+1849:   }
+1850: 
+1851:   function closeSidebar() {
+1852:     sidebar.classList.remove('mobile-open');
+1853:     sidebarOverlay.classList.remove('active');
+1854:   }
+1855: 
+1856:   toggleSidebarBtn.addEventListener('click', () => {
+1857:     if (window.innerWidth <= 768) {
+1858:       openSidebar();
+1859:     } else {
+1860:       sidebar.classList.toggle('collapsed');
+1861:     }
+1862:   });
+1863: 
+1864:   closeSidebarMobile.addEventListener('click', closeSidebar);
+1865:   sidebarOverlay.addEventListener('click', closeSidebar);
+1866: 
+1867:   function resetNewChat() {
+1868:     messageList.innerHTML = '';
+1869:     emptyState.style.display = 'flex';
+1870:     state.sessionId = 'session_' + Date.now();
+1871:     showToast('Started a new conversation session');
+1872:   }
+1873: 
+1874:   newChatBtn.addEventListener('click', resetNewChat);
+1875: 
+1876:   document.getElementById('clear-history-btn').addEventListener('click', resetNewChat);
+1877: 
+1878:   closeSupportModalBtn.addEventListener('click', () => closeModal(supportModal));
+1879: 
+1880:   // Modal Helpers
+1881:   function openModal(modalEl) {
+1882:     modalEl.classList.add('active');
+1883:   }
+1884: 
+1885:   function closeModal(modalEl) {
+1886:     modalEl.classList.remove('active');
+1887:   }
+1888: 
+1889:   // Allow clicking anywhere on modal backdrop to close modal
+1890:   document.querySelectorAll('.modal').forEach(modal => {
+1891:     const backdrop = modal.querySelector('.modal-backdrop');
+1892:     if (backdrop) {
+1893:       backdrop.addEventListener('click', () => closeModal(modal));
+1894:     }
+1895:   });
+1896: 
+1897:   // Toast Helper
+1898:   let toastTimer = null;
+1899:   function showToast(msg) {
+1900:     toastText.textContent = msg;
+1901:     toastNotify.classList.add('show');
+1902:     if (toastTimer) clearTimeout(toastTimer);
+1903:     toastTimer = setTimeout(() => {
+1904:       toastNotify.classList.remove('show');
+1905:     }, 2800);
+1906:   }
+1907: 
+1908:   function scrollToBottom() {
+1909:     chatScrollArea.scrollTop = chatScrollArea.scrollHeight;
+1910:   }
+1911: 
+1912:   function escapeHtml(str) {
+1913:     if (!str) return '';
+1914:     return str.replace(/&/g, '&amp;')
+1915:               .replace(/</g, '&lt;')
+1916:               .replace(/>/g, '&gt;')
+1917:               .replace(/"/g, '&quot;')
+1918:               .replace(/'/g, '&#039;');
+1919:   }
+1920: 
+1921:   function formatMarkdown(text) {
+1922:     if (!text) return '';
+1923:     let parsed = escapeHtml(text);
+1924:     // Bold **text**
+1925:     parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+1926:     // Bullet list lines
+1927:     parsed = parsed.replace(/^- (.*)$/gim, '• $1');
+1928:     return parsed;
+1929:   }
+1930: 
+1931: });
+1932: 
